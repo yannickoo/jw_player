@@ -1,0 +1,22 @@
+/* $Id:$ */
+
+/**
+ * JW Player widget.
+ */
+div.jw-player-preview {
+  float: left; /* LTR */
+  padding: 0 10px 10px 0; /* LTR */
+}
+
+div.jw-player-widget-data {
+  float: left; /* LTR */
+}
+
+div.jw-player-widget-data .form-managed-file img {
+  vertical-align: top;
+  margin: 0 10px 0 0;
+}
+
+div.jw-player-widget-data input.text-field {
+  width: auto;
+}

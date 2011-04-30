@@ -1,0 +1,8 @@
+; $Id: jw_player.info, v 0.1, 2009/07/28 12:11:24, skilip Exp $
+name = JW Player
+description = Adds a theme function which allows theme developers to use the JW Player
+version = VERSION
+core = 7.x
+dependencies[] = image
+files[] = jw_player.module
+files[] = jw_player.theme.inc

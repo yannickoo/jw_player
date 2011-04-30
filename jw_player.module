@@ -1,0 +1,523 @@
+<?php
+// $Id: jw_player.module, v 0.1, 2009/07/28 12:11:24, skilip Exp $;
+
+/**
+ * @file
+ *
+ * Adds a theme function which allows theme developers to use the JW Player .
+ */
+
+/**
+ * Implements hook_field_info().
+ */
+function jw_player_field_info() {
+  return array(
+    'jw_player_field' => array(
+      'label' => t('JW Player'),
+      'description' => t('Store a title, href, and attributes in the database to assemble a link.'),
+      'settings' => array(
+        'uri_scheme' => variable_get('file_default_scheme', 'public'),
+      ),
+      'instance_settings' => array(
+        'file_extensions' => 'flv',
+        'file_directory' => '',
+        'max_filesize' => '',
+        'default_thumbnail_offset' => '1',
+        'use_ffmpeg' => '0',
+      ),
+      'default_widget' => 'jw_player_field',
+      'default_formatter' => 'jw_player',
+    ),
+  );
+}
+
+/**
+ * Implements hook_field_settings_form().
+ */
+function jw_player_field_settings_form($field, $instance) {
+  $defaults = field_info_field_settings($field['type']);
+  $settings = array_merge($defaults, $field['settings']);
+
+  $scheme_options = array();
+  foreach (file_get_stream_wrappers(STREAM_WRAPPERS_WRITE_VISIBLE) as $scheme => $stream_wrapper) {
+    $scheme_options[$scheme] = $stream_wrapper['name'];
+  }
+  $form['uri_scheme'] = array(
+    '#type' => 'radios',
+    '#title' => t('Upload destination'),
+    '#options' => $scheme_options,
+    '#default_value' => $settings['uri_scheme'],
+    '#description' => t('Select where the final files should be stored. Private file storage has significantly more overhead than public files, but allows restricted access to files within this field.'),
+  );
+  return $form;
+}
+
+/**
+ * Implements hook_field_settings_form().
+ */
+function jw_player_field_instance_settings_form($field, $instance) {
+  $settings = $instance['settings'];
+
+  // Use the file field instance settings form as a basis.
+  $form = file_field_instance_settings_form($field, $instance);
+
+  $form['default_thumbnail_offset'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Default preview offset'),
+    '#default_value' => $settings['default_thumbnail_offset'],
+    '#size' => 5,
+    '#maxlength' => 5,
+    '#field_suffix' => t('seconds'),
+  );
+  $form['use_ffmpeg'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Use the FFMPEG library'),
+    '#default_value' => $settings['use_ffmpeg'],
+  );
+  return $form;
+}
+
+/**
+ * Implements hook_field_load().
+ */
+function jw_player_field_load($entity_type, $entities, $field, $instances, $langcode, &$items, $age) {
+  file_field_load($entity_type, $entities, $field, $instances, $langcode, $items, $age);
+}
+
+/**
+ * Implements hook_field_presave().
+ */
+function jw_player_field_presave($entity_type, $entity, $field, $instance, $langcode, &$items) {
+  file_field_presave($entity_type, $entity, $field, $instance, $langcode, $items);
+
+  foreach ($items as $item) {
+    if ($item['preview_image_fid'] && $item['preview_image_fid']) {
+      $file = file_load($item['preview_image_fid']);
+      if (!$file->status) {
+        $file->status = FILE_STATUS_PERMANENT;
+        file_save($file);
+      }
+    }
+  }
+}
+
+/**
+ * Implements hook_field_insert().
+ */
+function jw_player_field_insert($entity_type, $entity, $field, $instance, $langcode, &$items) {
+  file_field_insert($entity_type, $entity, $field, $instance, $langcode, $items);
+
+  // Add a new usage of each uploaded file.
+  foreach ($items as $item) {
+    if ($item['preview_image_fid']) {
+      $file = file_load($item['preview_image_fid']);
+      file_usage_add($file, 'file', $entity_type, $id);
+    }
+  }
+}
+
+/**
+ * Implements hook_field_update().
+ */
+function jw_player_field_update($entity_type, $entity, $field, $instance, $langcode, &$items) {
+  file_field_update($entity_type, $entity, $field, $instance, $langcode, $items);
+
+  list($id, $vid, $bundle) = entity_extract_ids($entity_type, $entity);
+
+  // On new revisions, all files are considered to be a new usage and no
+  // deletion of previous file usages are necessary.
+  if (!empty($entity->revision)) {
+    foreach ($items as $item) {
+      if ($item['preview_image_fid']) {
+        $file = file_load($item['preview_image_fid']);
+        file_usage_add($file, 'file', $entity_type, $id);
+      }
+    }
+    return;
+  }
+
+  // Build a display of the current FIDs.
+  $current_fids = array();
+  foreach ($items as $item) {
+    $current_fids[] = $item['preview_image_fid'];
+  }
+
+  // Create a bare-bones entity so that we can load its previous values.
+  $original = entity_create_stub_entity($entity_type, array($id, $vid, $bundle));
+  field_attach_load($entity_type, array($id => $original), FIELD_LOAD_CURRENT, array('field_id' => $field['id']));
+
+  // Compare the original field values with the ones that are being saved.
+  $original_fids = array();
+  if (!empty($original->{$field['field_name']}[$langcode])) {
+    foreach ($original->{$field['field_name']}[$langcode] as $original_item) {
+      $original_fids[] = $original_item['preview_image_fid'];
+      if (isset($original_item['preview_image_fid']) && !in_array($original_item['preview_image_fid'], $current_fids)) {
+        $original_item = file_load($original_item['preview_image_fid']);
+        // Decrement the file usage count by 1 and delete the file if possible.
+        file_field_delete_file($original_item, $field, $entity_type, $id);
+      }
+    }
+  }
+
+  // Add new usage entries for newly added files.
+  foreach ($items as $item) {
+    if (!in_array($item['preview_image_fid'], $original_fids)) {
+      if ($item['preview_image_fid']) {
+        $file = file_load($item['preview_image_fid']);
+        file_usage_add($file, 'file', $entity_type, $id);
+      }
+    }
+  }
+}
+
+/**
+ * Implements hook_field_delete().
+ */
+function jw_player_field_delete($entity_type, $entity, $field, $instance, $langcode, &$items) {
+  file_field_delete($entity_type, $entity, $field, $instance, $langcode, $items);
+}
+
+/**
+ * Implements hook_field_delete_revision().
+ */
+function jw_player_field_delete_revision($entity_type, $entity, $field, $instance, $langcode, &$items) {
+  file_field_delete_revision($entity_type, $entity, $field, $instance, $langcode, $items);
+}
+
+/**
+ * Implements hook_field_is_empty().
+ */
+function jw_player_field_is_empty($item, $field) {
+  return file_field_is_empty($item, $field);
+}
+
+/**
+ * Implements hook_field_widget_info().
+ */
+function jw_player_field_widget_info() {
+  return array(
+    'jw_player_field' => array(
+      'label' => 'JW Player',
+      'field types' => array('jw_player_field'),
+      'settings' => array(
+        'progress_indicator' => 'throbber',
+        'preview_image_style' => 'thumbnail',
+      ),
+      'behaviors' => array(
+        'multiple values' => FIELD_BEHAVIOR_CUSTOM,
+        'default value' => FIELD_BEHAVIOR_NONE,
+      ),
+    ),
+  );
+}
+
+/**
+ * Implements hook_field_widget_settings_form().
+ */
+function jw_player_field_widget_settings_form($field, $instance) {
+  $widget = $instance['widget'];
+  $settings = $widget['settings'];
+
+  // Use the file widget settings form.
+  $form = file_field_widget_settings_form($field, $instance);
+
+  $form['preview_image_style'] = array(
+    '#title' => t('Preview image style'),
+    '#type' => 'select',
+    '#options' => image_style_options(FALSE),
+    '#empty_option' => '<' . t('no preview') . '>',
+    '#default_value' => $settings['preview_image_style'],
+    '#description' => t('The preview jw_player will be shown while editing the content.'),
+    '#weight' => 15,
+  );
+
+  return $form;
+}
+
+/**
+ * Implements hook_field_widget_form().
+ */
+function jw_player_field_widget_form(&$form, &$form_state, $field, $instance, $langcode, $items, $delta, $element) {
+  // Add display_field setting to field because file_field_widget_form() assumes it is set.
+  $field['settings']['display_field'] = 0;
+
+  $elements = file_field_widget_form($form, $form_state, $field, $instance, $langcode, $items, $delta, $element);
+
+  foreach (element_children($elements) as $delta) {
+    $elements[$delta]['#process'][] = 'jw_player_field_process';
+    $elements[$delta]['preview_image_fid'] = array(
+      '#type' => 'managed_file',
+      '#title' => t('Preview image'),
+      '#upload_location' => file_build_uri($instance['settings']['file_directory']),
+      '#weight' => -7,
+      '#after_build' => array('jw_player_preview_image_thumb'),
+    );
+  }
+  return $elements;
+}
+
+/**
+ * Process the link type element before displaying the field.
+ *
+ * Build the form element. When creating a form using FAPI #process,
+ * note that $element['#value'] is already set.
+ *
+ * The $fields array is in $form['#field_info'][$element['#field_name']].
+ */
+function jw_player_field_process($element, $form_state, $form) {
+  $item = $element['#value'];
+  $item['fid'] = $element['fid']['#value'];
+
+  $element['#theme'] = 'jw_player_widget';
+  $element['#attached']['css'][] = drupal_get_path('module', 'jw_player') . '/jw_player.css';
+
+  $instance = field_widget_instance($element, $form_state);
+
+  $settings = $instance['settings'];
+  $widget_settings = $instance['widget']['settings'];
+
+  $element['preview_image_fid']['#instance'] = $instance;
+  $element['preview_image_fid']['#access'] = (bool) $item['fid'];
+  $element['preview_image_fid']['#required'] = (bool) $item['fid'];
+
+  if ($item['fid'] && !isset($item['preview_image_fid']) && $settings['use_ffmpeg']) {
+    $offset = isset($item['thumbnail_offset']) ? $item['thumbnail_offset'] : $settings['default_thumbnail_offset'];
+    if ($preview_image = jw_player_image_from_video($element['#file'], $offset)) {
+      $element['preview_image_fid']['#default_value'] = $preview_image->fid;
+    }
+  }
+
+  $element['thumbnail_offset'] = array(
+    '#type' => 'hidden',
+    '#title' => t('Thumbnail offset'),
+    '#default_value' => $instance['settings']['default_thumbnail_offset'],
+    '#size' => 5,
+    '#maxlength' => 5,
+    '#field_suffix' => t('seconds'),
+    '#weight' => -8,
+    '#access' => (bool) $item['fid'] && $settings['use_ffmpeg'] && $settings['default_thumbnail_offset'],
+  );
+
+  return $element;
+}
+
+/**
+ *
+ */
+function jw_player_preview_image_thumb($form_element) {
+  if ($form_element['#file'] && $form_element['#instance']['widget']['settings']['preview_image_style']) {
+    // Make sure we're not using a cached preview image.
+    image_path_flush($form_element['#file']->uri);
+
+    $form_element['filename']['#markup'] = theme('image_style', array(
+      'style_name' => $form_element['#instance']['widget']['settings']['preview_image_style'],
+      'path' => $form_element['#file']->uri,
+    ));
+  }
+  return $form_element;
+}
+
+/**
+ * Implements hook_theme().
+ */
+function jw_player_theme() {
+  return array(
+    // Theme functions in image.field.inc.
+    'jw_player_widget' => array(
+      'render element' => 'element',
+      'file' => 'jw_player.theme.inc',
+    ),
+    'jw_player_formatter' => array(
+      'variables' => array('item' => NULL, 'image_style' => NULL),
+      'file' => 'jw_player.theme.inc',
+    ),
+    'jw_player' => array(
+      'variables' => array('config' => array()),
+      'file' => 'jw_player.theme.inc',
+    ),
+  );
+  return $themes;
+}
+
+/**
+ * Implements hook_field_formatter_info().
+ */
+function jw_player_field_formatter_info() {
+  $formatters = array(
+    'jw_player' => array(
+      'label' => t('JW player'),
+      'field types' => array('jw_player_field'),
+      'settings' => array('image_style' => ''),
+    ),
+    'jw_player_image' => array(
+      'label' => t('JW player image'),
+      'field types' => array('jw_player_field'),
+      'settings' => array('image_style' => '', 'image_link' => ''),
+    ),
+  );
+  return $formatters;
+}
+
+/**
+ *
+ */
+function jw_player_image_from_video($file, $offset = 1) {
+  jw_player_file_get_paths($file);
+
+  if (file_exists($file->filepath)) {
+    $parts = (object) pathinfo($file->filepath);
+
+    // Create a file object for the preview image.
+    $preview = new stdClass();
+    $preview->filepath = $file->dirname . '/' . $parts->filename . '.jpg';
+    $preview->uri = drupal_substr($file->uri, 0, strrpos($file->uri, '.' . $parts->extension)) . '.jpg';
+
+    // Check if there'a a managed file stored already for this video.
+    if (file_exists($preview->filepath) && ($file = db_select('file_managed', 'fm')->fields('fm')->condition('uri', $preview->uri)->execute()->fetchObject())) {
+      return $file;
+    }
+
+    $command  = 'ffmpeg -i \'' . $file->filepath . '\'';
+    $command .= ' -ss ' . $offset;
+    $command .= ' -f image2 -vframes 1 \'' . $preview->filepath . '\'';
+
+    exec($command, $output);
+
+    if (file_exists($preview->filepath)) {
+      $file = file_save_data(file_get_contents($preview->filepath), $preview->uri, FILE_EXISTS_REPLACE);
+
+      // To avoid validation errors in file_managed_file_validate(), we need to set the
+      // status of our new file to 0. Otherwise the file is assumed to be present in the
+      // file_usage table, which it shouldn't untill it's actually saved after saving the
+      // node.
+      $file->status = 0;
+      file_save($file);
+
+      return $file;
+    }
+    else {
+      watchdog('jw_player', 'Failed to create a preview image from video file %file. Output: !output', array(
+        '%file' => $file->filepath,
+        '!output' => '<pre>' . print_r($output, TRUE) . '</pre>',
+      ));
+      drupal_set_message(t('The preview image could not be created.'), 'error');
+      return FALSE;
+    }
+  }
+}
+
+/**
+ * Implements hook_field_formatter_settings_form().
+ */
+function jw_player_field_formatter_settings_form($field, $instance, $view_mode, $form, &$form_state) {
+  $display = $instance['display'][$view_mode];
+  $settings = $display['settings'];
+
+  $image_styles = image_style_options(FALSE);
+  $element['image_style'] = array(
+    '#title' => t('Image style'),
+    '#type' => 'select',
+    '#default_value' => $settings['image_style'],
+    '#empty_option' => t('None (original image)'),
+    '#options' => $image_styles,
+  );
+
+  if (strstr($display['type'], 'image')) {
+    $link_types = array(
+      'content' => t('Content'),
+      'file' => t('File'),
+    );
+
+    // If the Fancybox library is enabled, add the option to open the video in an overlay.
+    foreach (module_implements('library') as $module) {
+      if ($library = drupal_get_library($module, 'fancybox')) {
+        $link_types['fancybox'] = t('Fancybox');
+        break;
+      }
+    }
+
+    $element['image_link'] = array(
+      '#title' => t('Link image to'),
+      '#type' => 'select',
+      '#default_value' => $settings['image_link'],
+      '#empty_option' => t('Nothing'),
+      '#options' => $link_types,
+    );
+  }
+  return $element;
+}
+
+/**
+ * Implements hook_field_formatter_settings_summary().
+ */
+function jw_player_field_formatter_settings_summary($field, $instance, $view_mode) {
+  $display = $instance['display'][$view_mode];
+  $settings = $display['settings'];
+
+  $summary = array();
+
+  $image_styles = image_style_options(FALSE);
+  // Unset possible 'No defined styles' option.
+  unset($image_styles['']);
+  // Styles could be lost because of enabled/disabled modules that defines
+  // their styles in code.
+  if (isset($image_styles[$settings['image_style']])) {
+    $summary[] = t('Image style: @style', array('@style' => $image_styles[$settings['image_style']]));
+  }
+  else {
+    $summary[] = t('Original image');
+  }
+  $link_types = array(
+    'content' => t('Linked to content'),
+    'file' => t('Linked to file'),
+  );
+  // Display this setting only if image is linked.
+  if (isset($settings['image_link']) && isset($link_types[$settings['image_link']])) {
+    $summary[] = $link_types[$settings['image_link']];
+  }
+  return implode('<br />', $summary);
+}
+
+/**
+ * Implements hook_field_formatter_view().
+ */
+function jw_player_field_formatter_view($entity_type, $entity, $field, $instance, $langcode, $items, $display) {
+  $element = array();
+
+  foreach ($items as $delta => $item) {
+    // Attach the preview image.
+    if ($item['preview_image_fid'] && ($file = file_load($item['preview_image_fid']))) {
+      $items[$delta]['preview_image'] = $file;
+      unset($items[$delta]['preview_image_fid']);
+    }
+  }
+
+  // Check if the formatter involves a link.
+  if (isset($display['settings']['image_link']) && in_array($display['settings']['image_link'], array('content', 'file'))) {
+    foreach ($items as $delta => $item) {
+      if (isset($item['preview_image'])) {
+        $items[$delta] = (array) $item['preview_image'];
+      }
+    }
+    return image_field_formatter_view($entity_type, $entity, $field, $instance, $langcode, $items, $display);
+  }
+
+  foreach ($items as $delta => $item) {
+    $element[$delta] = array(
+      '#theme' => 'jw_player_formatter',
+      '#item' => $item,
+      '#image_style' => $display['settings']['image_style'],
+    );
+  }
+  return $element;
+}
+
+/**
+ *
+ */
+function jw_player_file_get_paths(&$file) {
+  $wrapper = file_stream_wrapper_get_instance_by_uri($file->uri);
+  $file->realpath = $wrapper->realpath();
+  $file->dirname = str_replace($_SERVER['DOCUMENT_ROOT'] . '/', '', dirname($file->realpath));
+  $file->filepath = str_replace($_SERVER['DOCUMENT_ROOT'] . '/', '', $file->realpath);
+}
