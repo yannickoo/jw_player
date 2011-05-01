@@ -443,7 +443,7 @@ function jw_player_theme() {
       'file' => 'jw_player.theme.inc',
     ),
     'jw_player_formatter' => array(
-      'variables' => array('item' => NULL, 'image_style' => NULL),
+      'variables' => array('item' => NULL, 'image_style' => NULL, 'skin' => ''),
       'file' => 'jw_player.theme.inc',
     ),
     'jw_player' => array(
@@ -462,12 +462,18 @@ function jw_player_field_formatter_info() {
     'jw_player' => array(
       'label' => t('JW player'),
       'field types' => array('jw_player_field'),
-      'settings' => array('image_style' => ''),
+      'settings' => array(
+        'skin' => '',
+        'image_style' => '',
+      ),
     ),
     'jw_player_image' => array(
       'label' => t('JW player image'),
       'field types' => array('jw_player_field'),
-      'settings' => array('image_style' => '', 'image_link' => ''),
+      'settings' => array(
+        'image_style' => '',
+        'image_link' => '',
+      ),
     ),
   );
   return $formatters;
@@ -511,6 +517,19 @@ function jw_player_field_formatter_settings_form($field, $instance, $view_mode, 
       '#options' => $link_types,
     );
   }
+  else {
+    $skin_options = array();
+    foreach (jw_player_skins() as $skin) {
+      $skin_options[$skin->uri] = ucfirst($skin->name);
+    }
+    $element['skin'] = array(
+      '#title' => t('Skin'),
+      '#type' => 'select',
+      '#default_value' => $settings['skin'],
+      '#empty_option' => t('None (default skin)'),
+      '#options' => $skin_options,
+    );
+  }
   return $element;
 }
 
@@ -534,6 +553,15 @@ function jw_player_field_formatter_settings_summary($field, $instance, $view_mod
   else {
     $summary[] = t('Original image');
   }
+
+  $skins = jw_player_skins();
+  if (isset($skins[$settings['skin']])) {
+    $summary[] = t('Skin: @name', array('@name' => $skins[$settings['skin']]->name));
+  }
+  else {
+    $summary[] = t('Default skin');
+  }
+
   $link_types = array(
     'content' => t('Linked to content'),
     'file' => t('Linked to file'),
@@ -574,6 +602,7 @@ function jw_player_field_formatter_view($entity_type, $entity, $field, $instance
       '#theme' => 'jw_player_formatter',
       '#item' => $item,
       '#image_style' => $display['settings']['image_style'],
+      '#skin' => $display['settings']['skin'],
     );
   }
   return $element;
@@ -623,4 +652,25 @@ function jw_player_image_from_video($file, $offset = 1) {
       return FALSE;
     }
   }
+}
+
+/**
+ * Retrieves all available skins,
+ */
+function jw_player_skins($name = NULL) {
+  $skins = &drupal_static(__FUNCTION__);
+
+  if (!isset($skins)) {
+    $directory = drupal_get_path('module', 'jw_player') .'/skins';
+    $skins = file_scan_directory($directory, '/\.xml|\.swf$/');
+  }
+
+  if ($name) {
+    foreach ($skins as $file) {
+      if ($file->name == $name) {
+        return $file;
+      }
+    }
+  }
+  return $skins;
 }

@@ -72,6 +72,10 @@ function theme_jw_player_formatter($variables) {
     'image' => file_create_url($preview_image->uri),
   );
 
+  if ($variables['skin']) {
+    $config['skin'] = file_create_url($variables['skin']);
+  }
+
   // Allow other modules to alter the configuration of the player before it's rendered.
   drupal_alter('jw_player_config', $config, $file);
 
