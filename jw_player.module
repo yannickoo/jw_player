@@ -238,10 +238,78 @@ function jw_player_field_widget_settings_form($field, $instance) {
  * Implements hook_field_widget_form().
  */
 function jw_player_field_widget_form(&$form, &$form_state, $field, $instance, $langcode, $items, $delta, $element) {
-  // Add display_field setting to field because file_field_widget_form() assumes it is set.
-  $field['settings']['display_field'] = 0;
+  $defaults = array(
+    'fid' => 0,
+    'display' => 0,
+    'description' => '',
+  );
 
-  $elements = file_field_widget_form($form, $form_state, $field, $instance, $langcode, $items, $delta, $element);
+  // Determine the number of widgets to display.
+  switch ($field['cardinality']) {
+    case FIELD_CARDINALITY_UNLIMITED:
+      $field_state = field_form_get_state($element['#field_parents'], $field['field_name'], $langcode, $form_state);
+      $max = $field_state['items_count'];
+      break;
+
+    default:
+      $max = $field['cardinality'] - 1;
+      break;
+  }
+
+  // Essentially we use the managed_file type, extended with some enhancements.
+  $element_info = element_info('managed_file');
+  $element += array(
+    '#type' => 'managed_file',
+    '#default_value' => isset($items[$delta]) ? $items[$delta] : $defaults,
+    '#upload_location' => file_field_widget_uri($field, $instance),
+    '#upload_validators' => file_field_widget_upload_validators($field, $instance),
+    '#value_callback' => 'file_field_widget_value',
+    '#process' => array_merge($element_info['#process'], array('file_field_widget_process')),
+    // Allows this field to return an array instead of a single value.
+    '#extended' => TRUE,
+  );
+
+  if ($field['cardinality'] == 1) {
+    // If there's only one field, return it as delta 0.
+    if (empty($element['#default_value']['fid'])) {
+      $element['#description'] = theme('file_upload_help', array('description' => $element['#description'], 'upload_validators' => $element['#upload_validators']));
+    }
+    $elements = array($element);
+  }
+  else {
+    // If there are multiple values, add an element for each existing one.
+    for ($delta = 0; $delta < $max; $delta++) {
+      $elements[$delta] = $element;
+      $elements[$delta]['#default_value'] = isset($items[$delta]) ? $items[$delta] : $defaults;
+      $elements[$delta]['#weight'] = $delta;
+      $elements[$delta]['#delta'] = $delta;
+    }
+    // And then add one more empty row for new uploads.
+    if (($field['cardinality'] == FIELD_CARDINALITY_UNLIMITED || $delta < $field['cardinality']) && empty($form_state['programmed'])) {
+      $elements[$delta] = $element;
+      $elements[$delta]['#default_value'] = $defaults;
+      $elements[$delta]['#weight'] = $delta;
+      $elements[$delta]['#delta'] = $delta;
+      $elements[$delta]['#required'] = ($element['#required'] && $delta == 0);
+    }
+    // The group of elements all-together need some extra functionality
+    // after building up the full list (like draggable table rows).
+    $elements['#file_upload_delta'] = $delta;
+    $elements['#theme'] = 'file_widget_multiple';
+    $elements['#theme_wrappers'] = array('fieldset');
+    $elements['#process'] = array('file_field_widget_process_multiple');
+    $elements['#title'] = $element['#title'];
+    $elements['#description'] = $element['#description'];
+    $elements['#field_name'] = $element['#field_name'];
+    $elements['#language'] = $element['#language'];
+    $elements['#display_field'] = isset($field['settings']['display_field']) ? $field['settings']['display_field'] : 0;
+
+    // Add some properties that will eventually be added to the file upload
+    // field. These are added here so that they may be referenced easily through
+    // a hook_form_alter().
+    $elements['#file_upload_title'] = t('Add a new file');
+    $elements['#file_upload_description'] = theme('file_upload_help', array('description' => '', 'upload_validators' => $elements[0]['#upload_validators']));
+  }
 
   foreach (element_children($elements) as $delta) {
     $elements[$delta]['#process'][] = 'jw_player_field_process';
@@ -298,7 +366,45 @@ function jw_player_field_process($element, $form_state, $form) {
     '#access' => (bool) $item['fid'] && $settings['use_ffmpeg'] && $settings['default_thumbnail_offset'],
   );
 
+  $element['upload_button']['#submit'][] = $element['remove_button']['#submit'][] = 'jw_player_widget_submit';
+
   return $element;
+}
+
+/**
+ * Submit handler for upload and remove buttons of jw_player fields.
+ */
+function jw_player_widget_submit($form, &$form_state) {
+  $button = $form_state['triggering_element'];
+
+  // Go one level up in the form, to the widgets container.
+  $element = drupal_array_get_nested_value($form, array_slice($button['#array_parents'], 0, -1));
+  $field_name = $element['#field_name'];
+  $langcode = $element['#language'];
+  $parents = $element['#field_parents'];
+
+  $submitted_values = drupal_array_get_nested_value($form_state['values'], array_slice($button['#array_parents'], 0, -2));
+  $count = 0;
+  foreach ($submitted_values as $delta => $submitted_value) {
+    if ($submitted_value['fid']) {
+      $count++;
+    }
+    else {
+      unset($submitted_values[$delta]);
+    }
+  }
+
+  // Re-index deltas after removing empty items.
+  $submitted_values = array_values($submitted_values);
+
+  // Update form_state values and input.
+  form_set_value($element, $submitted_values, $form_state);
+  drupal_array_set_nested_value($form_state['values'], array_slice($button['#array_parents'], 0, -2), $submitted_values);
+
+  // Update items count.
+  $field_state = field_form_get_state($parents, $field_name, $langcode, $form_state);
+  $field_state['items_count'] = $count;
+  field_form_set_state($parents, $field_name, $langcode, $form_state, $field_state);
 }
 
 /**
