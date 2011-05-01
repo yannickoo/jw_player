@@ -408,7 +408,10 @@ function jw_player_widget_submit($form, &$form_state) {
 }
 
 /**
+ * After build callback for a JW Player widget form element.
+ * Creates a preview image for the form element.
  *
+ * @see jw_player_field_widget_form()
  */
 function jw_player_preview_image_thumb($form_element) {
   if ($form_element['#file'] && $form_element['#instance']['widget']['settings']['preview_image_style']) {
@@ -462,54 +465,6 @@ function jw_player_field_formatter_info() {
     ),
   );
   return $formatters;
-}
-
-/**
- *
- */
-function jw_player_image_from_video($file, $offset = 1) {
-  jw_player_file_get_paths($file);
-
-  if (file_exists($file->filepath)) {
-    $parts = (object) pathinfo($file->filepath);
-
-    // Create a file object for the preview image.
-    $preview = new stdClass();
-    $preview->filepath = $file->dirname . '/' . $parts->filename . '.jpg';
-    $preview->uri = drupal_substr($file->uri, 0, strrpos($file->uri, '.' . $parts->extension)) . '.jpg';
-
-    // Check if there'a a managed file stored already for this video.
-    if (file_exists($preview->filepath) && ($file = db_select('file_managed', 'fm')->fields('fm')->condition('uri', $preview->uri)->execute()->fetchObject())) {
-      return $file;
-    }
-
-    $command  = 'ffmpeg -i \'' . $file->filepath . '\'';
-    $command .= ' -ss ' . $offset;
-    $command .= ' -f image2 -vframes 1 \'' . $preview->filepath . '\'';
-
-    exec($command, $output);
-
-    if (file_exists($preview->filepath)) {
-      $file = file_save_data(file_get_contents($preview->filepath), $preview->uri, FILE_EXISTS_REPLACE);
-
-      // To avoid validation errors in file_managed_file_validate(), we need to set the
-      // status of our new file to 0. Otherwise the file is assumed to be present in the
-      // file_usage table, which it shouldn't untill it's actually saved after saving the
-      // node.
-      $file->status = 0;
-      file_save($file);
-
-      return $file;
-    }
-    else {
-      watchdog('jw_player', 'Failed to create a preview image from video file %file. Output: !output', array(
-        '%file' => $file->filepath,
-        '!output' => '<pre>' . print_r($output, TRUE) . '</pre>',
-      ));
-      drupal_set_message(t('The preview image could not be created.'), 'error');
-      return FALSE;
-    }
-  }
 }
 
 /**
@@ -619,11 +574,47 @@ function jw_player_field_formatter_view($entity_type, $entity, $field, $instance
 }
 
 /**
- *
+ * Helper function for generating a preview image of a given video file.
  */
-function jw_player_file_get_paths(&$file) {
-  $wrapper = file_stream_wrapper_get_instance_by_uri($file->uri);
-  $file->realpath = $wrapper->realpath();
-  $file->dirname = str_replace($_SERVER['DOCUMENT_ROOT'] . '/', '', dirname($file->realpath));
-  $file->filepath = str_replace($_SERVER['DOCUMENT_ROOT'] . '/', '', $file->realpath);
+function jw_player_image_from_video($file, $offset = 1) {
+  if (file_exists($file->filepath)) {
+    $parts = (object) pathinfo($file->filepath);
+
+    // Create a file object for the preview image.
+    $preview = new stdClass();
+    $preview->filepath = $file->dirname . '/' . $parts->filename . '.jpg';
+    $preview->uri = drupal_substr($file->uri, 0, strrpos($file->uri, '.' . $parts->extension)) . '.jpg';
+
+    // Check if there'a a managed file stored already for this video.
+    if (file_exists($preview->filepath) && ($file = db_select('file_managed', 'fm')->fields('fm')->condition('uri', $preview->uri)->execute()->fetchObject())) {
+      return $file;
+    }
+
+    $command  = 'ffmpeg -i \'' . $file->filepath . '\'';
+    $command .= ' -ss ' . $offset;
+    $command .= ' -f image2 -vframes 1 \'' . $preview->filepath . '\'';
+
+    exec($command, $output);
+
+    if (file_exists($preview->filepath)) {
+      $file = file_save_data(file_get_contents($preview->filepath), $preview->uri, FILE_EXISTS_REPLACE);
+
+      // To avoid validation errors in file_managed_file_validate(), we need to set the
+      // status of our new file to 0. Otherwise the file is assumed to be present in the
+      // file_usage table, which it shouldn't untill it's actually saved after saving the
+      // node.
+      $file->status = 0;
+      file_save($file);
+
+      return $file;
+    }
+    else {
+      watchdog('jw_player', 'Failed to create a preview image from video file %file. Output: !output', array(
+        '%file' => $file->filepath,
+        '!output' => '<pre>' . print_r($output, TRUE) . '</pre>',
+      ));
+      drupal_set_message(t('The preview image could not be created.'), 'error');
+      return FALSE;
+    }
+  }
 }
