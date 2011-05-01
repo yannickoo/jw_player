@@ -71,8 +71,11 @@ function jw_player_field_instance_settings_form($field, $instance) {
   );
   $form['use_ffmpeg'] = array(
     '#type' => 'checkbox',
-    '#title' => t('Use the FFMPEG library'),
+    '#title' => t('Use the FFmpeg library'),
     '#default_value' => $settings['use_ffmpeg'],
+    '#description' => t('If your server runs the !ffmpeg_link library, preview images can be generated automatically.', array(
+      '!ffmpeg_link' => l('FFmpeg', 'http://www.ffmpeg.org/'), 
+    )),
   );
   return $form;
 }
@@ -107,7 +110,9 @@ function jw_player_field_presave($entity_type, $entity, $field, $instance, $lang
 function jw_player_field_insert($entity_type, $entity, $field, $instance, $langcode, &$items) {
   file_field_insert($entity_type, $entity, $field, $instance, $langcode, $items);
 
-  // Add a new usage of each uploaded file.
+  list($id, $vid, $bundle) = entity_extract_ids($entity_type, $entity);
+
+  // Add a new usage of each uploaded preview image.
   foreach ($items as $item) {
     if ($item['preview_image_fid']) {
       $file = file_load($item['preview_image_fid']);
@@ -612,27 +617,28 @@ function jw_player_field_formatter_view($entity_type, $entity, $field, $instance
  * Helper function for generating a preview image of a given video file.
  */
 function jw_player_image_from_video($file, $offset = 1) {
-  if (file_exists($file->filepath)) {
-    $parts = (object) pathinfo($file->filepath);
+  if (file_exists($file->uri)) {
+    $realpath = drupal_realpath($file->uri);
+    $parts = (object) pathinfo($realpath);
 
     // Create a file object for the preview image.
     $preview = new stdClass();
-    $preview->filepath = $file->dirname . '/' . $parts->filename . '.jpg';
     $preview->uri = drupal_substr($file->uri, 0, strrpos($file->uri, '.' . $parts->extension)) . '.jpg';
 
     // Check if there'a a managed file stored already for this video.
-    if (file_exists($preview->filepath) && ($file = db_select('file_managed', 'fm')->fields('fm')->condition('uri', $preview->uri)->execute()->fetchObject())) {
-      return $file;
+    $existing_files = file_load_multiple(array(), array('uri' => $preview->uri));
+    if (count($existing_files)) {
+      return reset($existing_files);
     }
 
-    $command  = 'ffmpeg -i \'' . $file->filepath . '\'';
+    $command  = 'ffmpeg -i \'' . $realpath . '\'';
     $command .= ' -ss ' . $offset;
-    $command .= ' -f image2 -vframes 1 \'' . $preview->filepath . '\'';
+    $command .= ' -f image2 -vframes 1 \'' . drupal_realpath($preview->uri) . '\'';
 
     exec($command, $output);
 
-    if (file_exists($preview->filepath)) {
-      $file = file_save_data(file_get_contents($preview->filepath), $preview->uri, FILE_EXISTS_REPLACE);
+    if (file_exists($preview->uri)) {
+      $file = file_save_data(file_get_contents(drupal_realpath($preview->uri)), $preview->uri, FILE_EXISTS_REPLACE);
 
       // To avoid validation errors in file_managed_file_validate(), we need to set the
       // status of our new file to 0. Otherwise the file is assumed to be present in the
