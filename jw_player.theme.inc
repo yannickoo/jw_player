@@ -61,11 +61,11 @@ function theme_jw_player_formatter($variables) {
 
   // Get the image dimensions. These will overwrite the dimensions of the player if they aren't set
   $info = image_get_info($preview_image->uri);
-  $path = drupal_get_path('module', 'jw_player');
+  $path = libraries_get_path('jwplayer');
 
   $config = array(
     'id' => 'jw_player_' . $file->fid,
-    'flashplayer' => file_create_url($path . '/mediaplayer/player.swf'),
+    'flashplayer' => file_create_url($path . '/player.swf'),
     'width' => (isset($variables['width']) ? $variables['width'] : $info['width']),
     'height' => (isset($variables['height']) ? $variables['height'] : $info['height']),
     'file' => file_create_url($file->uri),
@@ -96,10 +96,10 @@ function theme_jw_player($variables) {
 
   $output = '<div id="' . $config['id'] . '"></div>';
 
-  $path = drupal_get_path('module', 'jw_player');
+  $path = libraries_get_path('jwplayer');
 
-  drupal_add_js($path . '/mediaplayer/jwplayer.js');
-  drupal_add_js($path . '/jw_player.js');
+  drupal_add_js($path . '/jwplayer.js');
+  drupal_add_js(drupal_get_path('module', 'jw_player') . '/jw_player.js');
   drupal_add_js(array('jw_player' => array($config['id'] => $config)), 'setting');
 
   return $output;

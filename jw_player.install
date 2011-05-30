@@ -52,14 +52,13 @@ function jw_player_requirements($phase) {
   // Ensure translations don't break at install time
   $t = get_t();
 
-  $path = drupal_get_path('module', 'jw_player');
+  $directory = libraries_get_path('jwplayer');
 
   // Check the exisence of the JW Player Library
   if ($phase == 'runtime') {
     $errors = array();
 
     foreach (array('player.swf', 'jwplayer.js') as $file) {
-      $directory = $path . '/mediaplayer';
       if (!file_exists($directory . '/' . $file)) {
         $errors[] = $t('The file %file is not present in the directory %directory', array('%file' => $file, '%directory' => $directory));
       }
