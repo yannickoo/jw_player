@@ -4,5 +4,6 @@ description = Adds a theme function which allows theme developers to use the JW 
 version = VERSION
 core = 7.x
 dependencies[] = image
+dependencies[] = libraries
 files[] = jw_player.module
 files[] = jw_player.theme.inc

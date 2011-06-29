@@ -12,7 +12,8 @@ Bug reports, feature suggestions and latest developments:
 
 -- REQUIREMENTS --
 
-* This module depends on the File module, which is part of Drupal core.
+* This module depends on the File module, which is part of Drupal core as well
+  as the Libraries module (http://drupal.org/project/libraries).
 
 
 -- INSTALLATION --
@@ -20,9 +21,9 @@ Bug reports, feature suggestions and latest developments:
 * Download either the latest commercial or the latest non-commercial JW
   Player at http://www.longtailvideo.com/players/jw-flv-player/.
 
-* Extract the zip file and put the contents of the extracted folder in the
-  mediaplayer directory of this module. 
-  E.g.: sites/all/modules/contrib/jw_player_mediaplayer.
+* Extract the zip file and put the contents of the extracted folder in
+  libraries/jwplayer. 
+  E.g.: sites/all/libraries/jwplayer or sites/<sitename>/libraries/jwplayer
 	
 * Install this module as described at http://drupal.org/node/895232.
 

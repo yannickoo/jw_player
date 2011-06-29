@@ -673,7 +673,7 @@ function jw_player_skins($name = NULL) {
   $skins = &drupal_static(__FUNCTION__);
 
   if (!isset($skins)) {
-    $directory = drupal_get_path('module', 'jw_player') .'/skins';
+    $directory = libraries_get_path('jwplayer_skins');
     $skins = file_scan_directory($directory, '/\.xml|\.swf$/');
   }
 
