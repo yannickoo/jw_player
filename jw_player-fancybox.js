@@ -1,4 +1,3 @@
-// $Id: jw_player.js, v 0.1, 2009/07/28 12:11:24, skilip Exp $;
 (function ($) {
 
   /**

@@ -1,6 +1,4 @@
 <?php
-// $Id: jw_player_youtube.install,v 0.1 2011/03/03 13:57:42 skilip Exp $
-
 /**
  * @file
  * Install, update and uninstall functions for the jw_player_youtube module.

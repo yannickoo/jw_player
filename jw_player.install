@@ -1,6 +1,4 @@
 <?php
-// $Id: jw_player.install,v 1.14 2010/11/21 09:24:41 webchick Exp $
-
 /**
  * @file
  * Install, update and uninstall functions for the JW Player module.

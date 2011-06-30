@@ -1,5 +1,3 @@
-/* $Id$ */
-
 -- SUMMARY --
 
 The JW Player module adds a new field for displaying video files in a JW Player.
