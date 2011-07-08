@@ -1,8 +1,7 @@
 <?php
 /**
  * @file
- *
- * Adds a theme function which allows theme developers to use the JW Player .
+ * Adds a theme function which allows theme developers to use the JW Player.
  */
 
 /**
@@ -25,6 +24,18 @@ function jw_player_field_info() {
       ),
       'default_widget' => 'jw_player_field',
       'default_formatter' => 'jw_player',
+    ),
+  );
+}
+
+/**
+ * Implements hook_permission().
+ */
+function jw_player_permission() {
+  return array(
+    'administer JW Player presets' => array(
+      'title' => t('administer JW Player presets'),
+      'description' => t('Perform administration of JW Player presets'),
     ),
   );
 }
@@ -446,7 +457,7 @@ function jw_player_theme() {
       'file' => 'jw_player.theme.inc',
     ),
     'jw_player_formatter' => array(
-      'variables' => array('item' => NULL, 'image_style' => NULL, 'skin' => ''),
+      'variables' => array('item' => NULL, 'image_style' => NULL, 'preset' => ''),
       'file' => 'jw_player.theme.inc',
     ),
     'jw_player' => array(
@@ -468,6 +479,7 @@ function jw_player_field_formatter_info() {
       'settings' => array(
         'skin' => '',
         'image_style' => '',
+        'jwplayer_preset' => '',
       ),
     ),
     'jw_player_image' => array(
@@ -484,6 +496,12 @@ function jw_player_field_formatter_info() {
 
 /**
  * Implements hook_field_formatter_settings_form().
+ *
+ * @todo "skin" variable in field formatter settings is requied by JW Player
+ * field, with presets being made available and a preset already holding
+ * information of the skin, The additional variable seems to be duplicate and
+ * can be done away with. A decision needs to be made about the JW Player
+ * field. It removed this code can be removed.
  */
 function jw_player_field_formatter_settings_form($field, $instance, $view_mode, $form, &$form_state) {
   $display = $instance['display'][$view_mode];
@@ -523,16 +541,15 @@ function jw_player_field_formatter_settings_form($field, $instance, $view_mode, 
     );
   }
   else {
-    $skin_options = array();
-    foreach (jw_player_skins() as $skin) {
-      $skin_options[$skin->uri] = ucfirst($skin->name);
+    // Load existing presets within the system
+    foreach (jw_player_preset_load() as $preset => $item) {
+      $options[$preset] = $item['preset_name'];
     }
-    $element['skin'] = array(
-      '#title' => t('Skin'),
+    $element['jwplayer_preset'] = array(
+      '#title' => t('JW Player presets'),
       '#type' => 'select',
-      '#default_value' => $settings['skin'],
-      '#empty_option' => t('None (default skin)'),
-      '#options' => $skin_options,
+      '#default_value' => ($settings['jwplayer_preset']) ?  $settings['jwplayer_preset'] : FALSE,
+      '#options' => $options,
     );
   }
   return $element;
@@ -544,7 +561,6 @@ function jw_player_field_formatter_settings_form($field, $instance, $view_mode, 
 function jw_player_field_formatter_settings_summary($field, $instance, $view_mode) {
   $display = $instance['display'][$view_mode];
   $settings = $display['settings'];
-
   $summary = array();
 
   if ($field['type'] == 'jw_player_field') {
@@ -561,12 +577,18 @@ function jw_player_field_formatter_settings_summary($field, $instance, $view_mod
     }
   }
 
-  $skins = jw_player_skins();
-  if (isset($skins[$settings['skin']])) {
-    $summary[] = t('Skin: @name', array('@name' => $skins[$settings['skin']]->name));
+  $presets = jw_player_preset_load();
+  if (isset($presets[$settings['jwplayer_preset']])) {
+    $summary[] = t('Preset: @name', array('@name' => $presets[$settings['jwplayer_preset']]['preset_name']));
+    $summary[] = t('Description: @description', array('@description' => $presets[$settings['jwplayer_preset']]['description']));
+
+    $settings = $presets[$settings['jwplayer_preset']]['settings'];
+    foreach ($settings as $key => $val) {
+      $summary[] = t('@key: @val', array('@key' => $key, '@val' => !empty($val) ? $val : t('Default')));
+    }
   }
   else {
-    $summary[] = t('Default skin');
+    $summary[] = t('Default preset');
   }
 
   $link_types = array(
@@ -611,7 +633,7 @@ function jw_player_field_formatter_view($entity_type, $entity, $field, $instance
       '#theme' => 'jw_player_formatter',
       '#item' => $item,
       '#image_style' => $display['settings']['image_style'],
-      '#skin' => $display['settings']['skin'],
+      '#preset' => $display['settings']['jwplayer_preset'],
     );
   }
   return $element;
@@ -683,4 +705,66 @@ function jw_player_skins($name = NULL) {
     }
   }
   return $skins;
+}
+
+/**
+ * Implements hook_ctools_plugin_api().
+ */
+function jw_player_ctools_plugin_api($owner, $api) {
+  if ($owner == 'jw_player' && $api == 'jw_player_presets') {
+    return array('version' => 1);
+  }
+}
+
+/**
+ * Implements hook_default_jwplayer_presets().
+ */
+function jw_player_default_jw_player_presets() {
+  $export = array();
+
+  $jwplayer_preset = new stdClass;
+  $jwplayer_preset->disabled = FALSE; /* Edit this to true to make a default jwplayer_preset disabled initially */
+  $jwplayer_preset->api_version = 1;
+  $jwplayer_preset->preset_name = '640 x 480';
+  $jwplayer_preset->machine_name = 'large';
+  $jwplayer_preset->description = 'Displays video in 640x480 resolution. Provided as a default to get started quickly, can be disabled.';
+  $jwplayer_preset->settings = array(
+    'width' => '640',
+    'height' => '480',
+  );
+
+  $export['default_large'] = $jwplayer_preset;
+
+  return $export;
+}
+
+/**
+ * Implements hook_ctools_plugin_directory().
+ */
+function jw_player_ctools_plugin_directory($module, $type) {
+  // Load the export_ui plugin.
+  if ($type =='export_ui') {
+    return 'plugins/export_ui';
+  }
+}
+
+/**
+ * Load a given preset(s)
+ * @param string $machine_name
+ * @return array
+ */
+function jw_player_preset_load($machine_name = NULL){
+  if (isset($machine_name)){
+    $items = ctools_export_crud_load('jwplayer_preset', $machine_name);
+
+    // CTools returns an object, so we explictly typecast it to array before returning
+    $items =  (array) $items;
+  }
+  else {
+    $result = ctools_export_crud_load_all('jwplayer_preset');
+    foreach ($result as $key => $item) {
+      $items[$key] = (array) $item;
+    }
+  }
+  return $items;
 }

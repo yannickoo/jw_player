@@ -41,13 +41,16 @@ function theme_jw_player_widget($variables) {
  *   An associative array containing:
  *   - item: An array of image data.
  *   - image_style: An optional image style.
+ *   - preset : An array of JW Player formatter information.
  *
  * @ingroup themeable
  */
 function theme_jw_player_formatter($variables) {
   $file = (object) $variables['item'];
-  $preview_image = $file->preview_image;
-
+  if (!empty($file->preview_image)) {
+    $preview_image = $file->preview_image;
+    $info = image_get_info($preview_image->uri);
+  }
 
   if ($variables['image_style']) {
     $image_path = image_style_path($variables['image_style'], $preview_image->uri);
@@ -57,21 +60,38 @@ function theme_jw_player_formatter($variables) {
     $preview_image->uri = $image_path;
   }
 
-  // Get the image dimensions. These will overwrite the dimensions of the player if they aren't set
-  $info = image_get_info($preview_image->uri);
   $path = libraries_get_path('jwplayer');
 
-  $config = array(
-    'id' => 'jw_player_' . $file->fid,
-    'flashplayer' => file_create_url($path . '/player.swf'),
-    'width' => (isset($variables['width']) ? $variables['width'] : $info['width']),
-    'height' => (isset($variables['height']) ? $variables['height'] : $info['height']),
-    'file' => file_create_url($file->uri),
-    'image' => file_create_url($preview_image->uri),
-  );
+  if (!empty($variables['preset'])) {
+    $preset = jw_player_preset_load($variables['preset']);
 
-  if ($variables['skin']) {
-    $config['skin'] = file_create_url($variables['skin']);
+    $settings = $preset['settings'];
+    $skin = jw_player_skins($settings['skin']);
+
+    $config = array(
+      'id' => 'jw_player_' . $file->fid,
+      'flashplayer' => file_create_url($path . '/player.swf'),
+      'width' => (isset($settings['width']) ? $settings['width'] : $info['width']),
+      'height' => (isset($settings['height']) ? $settings['height'] : $info['height']),
+      'file' => file_create_url($file->uri),
+      'skin' => is_object($skin) ? file_create_url($skin->uri) : FALSE,
+    );
+  }
+
+   // @todo Remove this code once JW Player field is removed. Skins are THE way
+   // to define formatting settings.
+  else {
+    $config = array(
+      'id' => 'jw_player_' . $file->fid,
+      'flashplayer' => file_create_url($path . '/player.swf'),
+      'width' => (isset($variables['width']) ? $variables['width'] : $info['width']),
+      'height' => (isset($variables['height']) ? $variables['height'] : $info['height']),
+      'file' => file_create_url($file->uri),
+      'image' => file_create_url($preview_image->uri),
+    );
+    if ($variables['skin']) {
+      $config['skin'] = file_create_url($variables['skin']);
+    }
   }
 
   // Allow other modules to alter the configuration of the player before it's rendered.
