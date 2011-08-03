@@ -46,57 +46,96 @@ function theme_jw_player_widget($variables) {
  * @ingroup themeable
  */
 function theme_jw_player_formatter($variables) {
-  $file = (object) $variables['item'];
-  if (!empty($file->preview_image)) {
-    $preview_image = $file->preview_image;
-    $info = image_get_info($preview_image->uri);
+  $files = $variables['files'];
+  if (empty($files)) {
+    return '';
   }
 
-  if ($variables['image_style']) {
-    $image_path = image_style_path($variables['image_style'], $preview_image->uri);
-    if (!file_exists($image_path)) {
-      image_style_create_derivative(image_style_load($variables['image_style']), $preview_image->uri, $image_path);
-    }
-    $preview_image->uri = $image_path;
+  // get the first file to play
+  $start_file = reset($files);
+
+  // player setup
+  $player_path = libraries_get_path('jwplayer');
+  $config = array();
+
+  // player config overrides
+  if (!empty($variables['config'])) {
+    $config = $variables['config'];
   }
 
-  $path = libraries_get_path('jwplayer');
-
+  // player preset settings
   if (!empty($variables['preset'])) {
     $preset = jw_player_preset_load($variables['preset']);
-
     $settings = $preset['settings'];
-    $skin = jw_player_skins($settings['skin']);
 
-    $config = array(
-      'id' => 'jw_player_' . $file->fid,
-      'flashplayer' => file_create_url($path . '/player.swf'),
-      'width' => (isset($settings['width']) ? $settings['width'] : $info['width']),
-      'height' => (isset($settings['height']) ? $settings['height'] : $info['height']),
-      'file' => file_create_url($file->uri),
-      'skin' => is_object($skin) ? file_create_url($skin->uri) : FALSE,
+    // resolve skin url
+    $skin = !empty($settings['skin']) ? jw_player_skins($settings['skin']) : '';
+    $config += array(
+      'skin' => !empty($skin) ? file_create_url($skin->uri) : FALSE,
     );
+
+    // merge in all other preset settings
+    $config += $settings;
   }
 
-   // @todo Remove this code once JW Player field is removed. Skins are THE way
-   // to define formatting settings.
-  else {
-    $config = array(
-      'id' => 'jw_player_' . $file->fid,
-      'flashplayer' => file_create_url($path . '/player.swf'),
-      'width' => (isset($variables['width']) ? $variables['width'] : $info['width']),
-      'height' => (isset($variables['height']) ? $variables['height'] : $info['height']),
+  // merge default settings
+  $config += jw_player_default_settings();
+
+  // process each file
+  $playlist = array();
+  $preview_image_style = !empty($variables['image_style']) ? $variables['image_style'] : '';
+  $start_file_isset = FALSE;
+  $base_item_title = t('!playlist_base_title', array(
+    '!playlist_base_title' => !empty($variables['playlist_base_title']) ? $variables['playlist_base_title'] : '',
+  ));
+
+  foreach ($files as $delta => $file) {
+    $player_item = array(
       'file' => file_create_url($file->uri),
-      'image' => file_create_url($preview_image->uri),
+      'title' => !empty($file->description) ? $file->description : (!empty($base_item_title) ? $base_item_title . ' ' . ($delta + 1) : basename($file->filename)),
     );
-    if ($variables['skin']) {
-      $config['skin'] = file_create_url($variables['skin']);
+
+    // image preview
+    if (!empty($file->preview_image) && !empty($file->preview_image->uri)) {
+      if ($preview_image_style) {
+        $preview_image_path = image_style_path($preview_image_style, $file->preview_image->uri);
+        if (!file_exists($preview_image_path)) {
+          image_style_create_derivative(image_style_load($preview_image_style), $file->preview_image->uri, $preview_image_path);
+        }
+        $player_item['image'] = image_style_url($preview_image_style, $preview_image_path);
+      }
+      else {
+        $player_item['image'] = file_create_url($file->preview_image->uri);
+      }
     }
+
+    // update main config
+    if (!$start_file_isset) {
+      $config['file'] = $player_item['file'];
+      if (!empty($player_item['image'])) {
+        $config['image'] = $player_item['image'];
+      }
+      $start_file_isset = TRUE;
+    }
+
+    // update playlist
+    $playlist[] = $player_item;
   }
+
+
+  // playlist handling
+  if (count($playlist) > 1) {
+    $config['playlist'] = $playlist;
+  }
+  else {
+    unset($config['playlist'], $config['playlist.position'], $config['playlist.size']);
+  }
+
 
   // Allow other modules to alter the configuration of the player before it's rendered.
   drupal_alter('jw_player_config', $config, $file);
 
+  // render player
   return theme('jw_player', array('config' => $config));
 }
 
@@ -104,21 +143,14 @@ function theme_jw_player_formatter($variables) {
  * Theme a single JW Player.
  */
 function theme_jw_player($variables) {
-  $id_count = &drupal_static(__FUNCTION__);
   $config = $variables['config'];
+  $html_id = drupal_html_id('jw_player');
+  $player_path = libraries_get_path('jwplayer');
 
-  if (!isset($config['id'])) {
-    $id_count = (isset($id_count) ? $id_count + 1 : 0);
-    $config['id'] = 'jw_player_' . $id_count;
-  }
-
-  $output = '<div id="' . $config['id'] . '"></div>';
-
-  $path = libraries_get_path('jwplayer');
-
-  drupal_add_js($path . '/jwplayer.js');
+  // add dependent resources
+  drupal_add_js($player_path . '/jwplayer.js');
   drupal_add_js(drupal_get_path('module', 'jw_player') . '/jw_player.js');
-  drupal_add_js(array('jw_player' => array($config['id'] => $config)), 'setting');
+  drupal_add_js(array('jw_player' => array($html_id => $config)), 'setting');
 
-  return $output;
+  return '<div id="' . $html_id . '"></div>';
 }

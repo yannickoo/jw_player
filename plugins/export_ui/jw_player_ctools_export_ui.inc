@@ -52,7 +52,7 @@ function jw_player_ctools_export_ui_form(&$form, &$form_state) {
     '#description' => t('Enter name for the preet.'),
     '#default_value' =>  $preset->preset_name,
     '#required' => true,
-    '#weight' => 0
+    '#weight' => 0,
   );
 
   $form['info']['machine_name'] = array(
@@ -68,8 +68,19 @@ function jw_player_ctools_export_ui_form(&$form, &$form_state) {
   );
 
   $form['settings'] = array(
+    '#type' => 'fieldset',
+    '#title' => 'Settings',
     '#tree' => true,
-    '#weight' => 2,
+    '#weight' => 5,
+   );
+
+   $form['description'] = array(
+     '#type' => 'textarea',
+     '#size' => 10,
+     '#title' => t('decription'),
+     '#description' => t('Summary for preset'),
+     '#default_value' => $preset->description,
+     '#weight' => 2,
    );
 
   $form['settings']['width'] = array(
@@ -80,7 +91,7 @@ function jw_player_ctools_export_ui_form(&$form, &$form_state) {
     '#field_suffix' => ' ' . t('pixels'),
     '#default_value' => $settings['width'],
     '#required' => true,
-    '#weight' => 5
+    '#weight' => 5,
   );
 
   $form['settings']['height'] = array(
@@ -91,9 +102,51 @@ function jw_player_ctools_export_ui_form(&$form, &$form_state) {
     '#field_suffix' => ' ' . t('pixels'),
     '#default_value' => $settings['height'],
     '#required' => true,
-    '#weight' => 6
+    '#weight' => 6,
   );
 
+  $form['settings']['controlbar'] = array(
+    '#title' => t('Controlbar Position'),
+    '#type' => 'select',
+    '#description' => t('The positon of the controlbar'),
+    '#default_value' => !empty($settings['controlbar']) ? $settings['controlbar']: 'none',
+    '#options' => array(
+      'none' => t('None'),
+      'bottom' => t('Bottom'),
+      'top' => t('Top'),
+      'over' => t('Over')
+    ),
+    '#weight' => 7,
+  );
+
+  // playlist settings
+  $form['settings']['playlist.position'] = array(
+    '#title' => t('Playlist Position'),
+    '#type' => 'select',
+    '#description' => t('The positon of the playlist'),
+    '#default_value' => !empty($settings['playlist.position']) ? $settings['playlist.position']: 'right',
+    '#options' => array(
+      'none' => t('None'),
+      'bottom' => t('Bottom'),
+      'top' => t('Top'),
+      'right' => t('Right'),
+      'left' => t('Left'),
+      'over' => t('Over')
+    ),
+    '#weight' => 8,
+  );
+
+   $form['settings']['playlist.size'] = array(
+    '#title' => t('Playlist Width'),
+    '#type' => 'textfield',
+    '#description' => t('The playlist width in pixels.'),
+    '#default_value' => !empty($settings['playlist.size']) ? $settings['playlist.size']: '180',
+    '#field_suffix' => ' ' . t('pixels'),
+    '#size' => 10,
+    '#weight' => 9,
+  );
+
+  // skins
   $skin_options = array();
   foreach (jw_player_skins() as $skin) {
     $skin_options[$skin->name] = ucfirst($skin->name);
@@ -107,14 +160,6 @@ function jw_player_ctools_export_ui_form(&$form, &$form_state) {
     '#options' => $skin_options,
   );
 
-  $form['description'] = array(
-    '#type' => 'textarea',
-    '#size' => 10,
-    '#title' => t('decription'),
-    '#description' => t('Summary for preset'),
-    '#default_value' => $preset->description,
-    '#weight' => 4
-  );
 }
 
 /**

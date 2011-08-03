@@ -83,7 +83,7 @@ function jw_player_field_instance_settings_form($field, $instance) {
     '#title' => t('Use the FFmpeg library'),
     '#default_value' => $settings['use_ffmpeg'],
     '#description' => t('If your server runs the !ffmpeg_link library, preview images can be generated automatically.', array(
-      '!ffmpeg_link' => l('FFmpeg', 'http://www.ffmpeg.org/'), 
+      '!ffmpeg_link' => l('FFmpeg', 'http://www.ffmpeg.org/'),
     )),
   );
   return $form;
@@ -457,7 +457,7 @@ function jw_player_theme() {
       'file' => 'jw_player.theme.inc',
     ),
     'jw_player_formatter' => array(
-      'variables' => array('item' => NULL, 'image_style' => NULL, 'preset' => ''),
+      'variables' => array('files' => array(), 'preset' => '', 'image_syle' => NULL),
       'file' => 'jw_player.theme.inc',
     ),
     'jw_player' => array(
@@ -482,15 +482,27 @@ function jw_player_field_formatter_info() {
         'jwplayer_preset' => '',
       ),
     ),
-    'jw_player_image' => array(
+    'jw_player_playlist' => array(
+      'label' => t('JW player playlist'),
+      'field types' => array('jw_player_field', 'file', 'media'),
+      'settings' => array(
+        'image_style' => '',
+        'jwplayer_preset' => '',
+      ),
+    ),
+  );
+
+  if (module_exists('image')) {
+    $formatters['jw_player_image'] = array(
       'label' => t('JW player image'),
       'field types' => array('jw_player_field'),
       'settings' => array(
         'image_style' => '',
         'image_link' => '',
       ),
-    ),
-  );
+    );
+  }
+
   return $formatters;
 }
 
@@ -504,10 +516,14 @@ function jw_player_field_formatter_info() {
  * field. It removed this code can be removed.
  */
 function jw_player_field_formatter_settings_form($field, $instance, $view_mode, $form, &$form_state) {
+  $element = array();
+
   $display = $instance['display'][$view_mode];
   $settings = $display['settings'];
+  $image_module_exists = module_exists('image');
 
-  if ($field['type'] == 'jw_player_field') {
+  // preview image style for jw_player_field
+  if ($field['type'] == 'jw_player_field' && $image_module_exists) {
     $image_styles = image_style_options(FALSE);
     $element['image_style'] = array(
       '#title' => t('Image style'),
@@ -518,39 +534,46 @@ function jw_player_field_formatter_settings_form($field, $instance, $view_mode, 
     );
   }
 
-  if (strstr($display['type'], 'image')) {
-    $link_types = array(
-      'content' => t('Content'),
-      'file' => t('File'),
-    );
-
-    // If the Fancybox library is enabled, add the option to open the video in an overlay.
-    foreach (module_implements('library') as $module) {
-      if ($library = drupal_get_library($module, 'fancybox')) {
-        $link_types['fancybox'] = t('Fancybox');
-        break;
+  // formatter types
+  switch ($display['type']) {
+    case 'jw_player':
+    case 'jw_player_playlist':
+      // Load existing presets within the system
+      foreach (jw_player_preset_load() as $preset => $item) {
+        $options[$preset] = $item['preset_name'];
       }
-    }
+      $element['jwplayer_preset'] = array(
+        '#title' => t('JW Player presets'),
+        '#type' => 'select',
+        '#default_value' => ($settings['jwplayer_preset']) ?  $settings['jwplayer_preset'] : FALSE,
+        '#options' => $options,
+      );
+      break;
 
-    $element['image_link'] = array(
-      '#title' => t('Link image to'),
-      '#type' => 'select',
-      '#default_value' => $settings['image_link'],
-      '#empty_option' => t('Nothing'),
-      '#options' => $link_types,
-    );
-  }
-  else {
-    // Load existing presets within the system
-    foreach (jw_player_preset_load() as $preset => $item) {
-      $options[$preset] = $item['preset_name'];
-    }
-    $element['jwplayer_preset'] = array(
-      '#title' => t('JW Player presets'),
-      '#type' => 'select',
-      '#default_value' => ($settings['jwplayer_preset']) ?  $settings['jwplayer_preset'] : FALSE,
-      '#options' => $options,
-    );
+    default:
+      if ($image_module_exists && strstr($display['type'], 'image')) {
+        $link_types = array(
+          'content' => t('Content'),
+          'file' => t('File'),
+        );
+
+        // If the Fancybox library is enabled, add the option to open the video in an overlay.
+        foreach (module_implements('library') as $module) {
+          if ($library = drupal_get_library($module, 'fancybox')) {
+            $link_types['fancybox'] = t('Fancybox');
+            break;
+          }
+        }
+
+        $element['image_link'] = array(
+          '#title' => t('Link image to'),
+          '#type' => 'select',
+          '#default_value' => $settings['image_link'],
+          '#empty_option' => t('Nothing'),
+          '#options' => $link_types,
+        );
+      }
+      break;
   }
   return $element;
 }
@@ -561,9 +584,11 @@ function jw_player_field_formatter_settings_form($field, $instance, $view_mode, 
 function jw_player_field_formatter_settings_summary($field, $instance, $view_mode) {
   $display = $instance['display'][$view_mode];
   $settings = $display['settings'];
+  $image_module_exists = module_exists('image');
+
   $summary = array();
 
-  if ($field['type'] == 'jw_player_field') {
+  if ($image_module_exists && $field['type'] == 'jw_player_field') {
     $image_styles = image_style_options(FALSE);
     // Unset possible 'No defined styles' option.
     unset($image_styles['']);
@@ -591,14 +616,17 @@ function jw_player_field_formatter_settings_summary($field, $instance, $view_mod
     $summary[] = t('Default preset');
   }
 
-  $link_types = array(
-    'content' => t('Linked to content'),
-    'file' => t('Linked to file'),
-  );
-  // Display this setting only if image is linked.
-  if (isset($settings['image_link']) && isset($link_types[$settings['image_link']])) {
-    $summary[] = $link_types[$settings['image_link']];
+  if ($image_module_exists) {
+    $link_types = array(
+      'content' => t('Linked to content'),
+      'file' => t('Linked to file'),
+    );
+    // Display this setting only if image is linked.
+    if (isset($settings['image_link']) && isset($link_types[$settings['image_link']])) {
+      $summary[] = $link_types[$settings['image_link']];
+    }
   }
+
   return implode('<br />', $summary);
 }
 
@@ -607,35 +635,54 @@ function jw_player_field_formatter_settings_summary($field, $instance, $view_mod
  */
 function jw_player_field_formatter_view($entity_type, $entity, $field, $instance, $langcode, $items, $display) {
   $element = array();
+  $image_module_exists = module_exists('image');
 
-  if ($field['type'] == 'jw_player_field') {
-    foreach ($items as $delta => $item) {
-      // Attach the preview image.
-      if ($item['preview_image_fid'] && ($file = file_load($item['preview_image_fid']))) {
-        $items[$delta]['preview_image'] = $file;
-        unset($items[$delta]['preview_image_fid']);
-      }
-    }
-  }
-
-  // Check if the formatter involves a link.
-  if (isset($display['settings']['image_link']) && in_array($display['settings']['image_link'], array('content', 'file'))) {
-    foreach ($items as $delta => $item) {
-      if (isset($item['preview_image'])) {
-        $items[$delta] = (array) $item['preview_image'];
-      }
-    }
-    return image_field_formatter_view($entity_type, $entity, $field, $instance, $langcode, $items, $display);
-  }
-
+  // process files for theme functions
+  $files = array();
   foreach ($items as $delta => $item) {
-    $element[$delta] = array(
-      '#theme' => 'jw_player_formatter',
-      '#item' => $item,
-      '#image_style' => $display['settings']['image_style'],
-      '#preset' => $display['settings']['jwplayer_preset'],
-    );
+    $files[$delta] = (object) $item;
+    if (!empty($item['preview_image_fid']) && ($preview_image = file_load($item['preview_image_fid']))) {
+      $files[$delta]->preview_image = $preview_image;
+    }
   }
+
+  // player formatters
+  $image_style = !empty($display['settings']['image_style']) ? $display['settings']['image_style'] : '';
+  switch ($display['type']) {
+    case 'jw_player':
+      foreach ($files as $delta => $file) {
+        $element[$delta] = array(
+          '#theme' => 'jw_player_formatter',
+          '#files' => array($file),
+          '#preset' => $display['settings']['jwplayer_preset'],
+          '#image_style' => $image_style,
+        );
+      }
+      break;
+
+    case 'jw_player_playlist':
+      $element[0] = array(
+        '#theme' => 'jw_player_formatter',
+        '#files' => $files,
+        '#preset' => $display['settings']['jwplayer_preset'],
+        '#image_style' => $image_style,
+      );
+      break;
+
+    default:
+      // image formatter if the formatter involves a link.
+      if ($image_module_exists && isset($display['settings']['image_link']) && in_array($display['settings']['image_link'], array('content', 'file'))) {
+        $preview_items = array();
+        foreach ($files as $delta => $file) {
+          if (isset($file->preview_image)) {
+            $preview_items[$delta] = (array) $file->preview_image;
+          }
+        }
+        return image_field_formatter_view($entity_type, $entity, $field, $instance, $langcode, $preview_items, $display);
+      }
+      break;
+  }
+
   return $element;
 }
 
@@ -767,4 +814,25 @@ function jw_player_preset_load($machine_name = NULL){
     }
   }
   return $items;
+}
+
+/**
+ * Returns default settings
+ */
+function jw_player_default_settings() {
+  $defaults = &drupal_static(__FUNCTION__);
+
+  if (!isset($defaults)) {
+    $player_path = libraries_get_path('jwplayer');
+    $defaults = array(
+      'flashplayer' => file_create_url($player_path . '/player.swf'),
+      'width' => '640',
+      'height' => '480',
+      'controlbar' => 'bottom',
+      'playlist.position' => 'right',
+      'playlist.size' => '180',
+    );
+  }
+
+  return $defaults;
 }
