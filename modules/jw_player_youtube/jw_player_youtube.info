@@ -1,5 +1,0 @@
-name = JW Player YouTube 
-description = Defines JW Player - YouTube field types.
-version = VERSION
-core = 7.x
-dependencies[] = jw_player
