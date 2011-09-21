@@ -160,6 +160,14 @@ function jw_player_ctools_export_ui_form(&$form, &$form_state) {
     '#options' => $skin_options,
   );
 
+  $form['settings']['autoplay'] = array(
+    '#title' => t('Autoplay'),
+    '#type' => 'checkbox',
+    '#description' => t('Set the video to autoplay on page load'),
+    '#default_value' => !empty($settings['autoplay']) ? $settings['autoplay']: 'false',
+    '#weight' => 4,
+  );
+
 }
 
 /**
