@@ -244,28 +244,6 @@ function jw_player_ctools_plugin_api($owner, $api) {
 }
 
 /**
- * Implements hook_default_jwplayer_presets().
- */
-function jw_player_default_jw_player_presets() {
-  $export = array();
-
-  $jwplayer_preset = new stdClass;
-  $jwplayer_preset->disabled = FALSE; /* Edit this to true to make a default jwplayer_preset disabled initially */
-  $jwplayer_preset->api_version = 1;
-  $jwplayer_preset->preset_name = '640 x 480';
-  $jwplayer_preset->machine_name = 'large';
-  $jwplayer_preset->description = 'Displays video in 640x480 resolution. Provided as a default to get started quickly, can be disabled.';
-  $jwplayer_preset->settings = array(
-    'width' => '640',
-    'height' => '480',
-  );
-
-  $export['default_large'] = $jwplayer_preset;
-
-  return $export;
-}
-
-/**
  * Implements hook_ctools_plugin_directory().
  */
 function jw_player_ctools_plugin_directory($module, $type) {
