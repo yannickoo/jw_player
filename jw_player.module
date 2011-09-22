@@ -22,7 +22,11 @@ function jw_player_permission() {
 function jw_player_theme() {
   return array(
     'jw_player' => array(
-      'variables' => array('file_url' => '', 'preset' => ''),
+      'variables' => array(
+        'file_url' => '',
+        'preset' => '',
+        'file_mime' => '',
+      ),
       'template' => 'theme/jw_player',
     ),
   );
@@ -114,12 +118,14 @@ function jw_player_field_formatter_view($entity_type, $entity, $field, $instance
     }
     // Create a file url to pass to
     $file_url = file_create_url($item['uri']);
+    $file_mime = $item['filemime'];
 
     foreach ($files as $delta => $file) {
       $element[$delta] = array(
         '#theme' => 'jw_player',
         '#file_url' => $file_url,
         '#preset' => $display['settings']['jwplayer_preset'],
+        '#file_mime' => $file_mime,
       );
     }
   }
