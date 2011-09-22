@@ -21,16 +21,11 @@ function jw_player_permission() {
  */
 function jw_player_theme() {
   return array(
-    'jw_player_formatter' => array(
-      'variables' => array('files' => array(), 'preset' => '', 'image_syle' => NULL),
-      'file' => 'jw_player.theme.inc',
-    ),
     'jw_player' => array(
-      'variables' => array('config' => array()),
-      'file' => 'jw_player.theme.inc',
+      'variables' => array('file_url' => '', 'preset' => ''),
+      'template' => 'theme/jw_player',
     ),
   );
-  return $themes;
 }
 
 /**
@@ -42,16 +37,6 @@ function jw_player_field_formatter_info() {
       'label' => t('JW player'),
       'field types' => array('file', 'media'),
       'settings' => array(
-        'skin' => '',
-        'image_style' => '',
-        'jwplayer_preset' => '',
-      ),
-    ),
-    'jw_player_playlist' => array(
-      'label' => t('JW player playlist'),
-      'field types' => array('file', 'media'),
-      'settings' => array(
-        'image_style' => '',
         'jwplayer_preset' => '',
       ),
     ),
@@ -61,24 +46,16 @@ function jw_player_field_formatter_info() {
 
 /**
  * Implements hook_field_formatter_settings_form().
- *
- * @todo "skin" variable in field formatter settings is requied by JW Player
- * field, with presets being made available and a preset already holding
- * information of the skin, The additional variable seems to be duplicate and
- * can be done away with. A decision needs to be made about the JW Player
- * field. It removed this code can be removed.
  */
 function jw_player_field_formatter_settings_form($field, $instance, $view_mode, $form, &$form_state) {
   $element = array();
 
   $display = $instance['display'][$view_mode];
   $settings = $display['settings'];
-  $image_module_exists = module_exists('image');
 
   // formatter types
   switch ($display['type']) {
     case 'jw_player':
-    case 'jw_player_playlist':
       // Load existing presets within the system
       foreach (jw_player_preset_load() as $preset => $item) {
         $options[$preset] = $item['preset_name'];
@@ -92,28 +69,6 @@ function jw_player_field_formatter_settings_form($field, $instance, $view_mode, 
       break;
 
     default:
-      if ($image_module_exists && strstr($display['type'], 'image')) {
-        $link_types = array(
-          'content' => t('Content'),
-          'file' => t('File'),
-        );
-
-        // If the Fancybox library is enabled, add the option to open the video in an overlay.
-        foreach (module_implements('library') as $module) {
-          if ($library = drupal_get_library($module, 'fancybox')) {
-            $link_types['fancybox'] = t('Fancybox');
-            break;
-          }
-        }
-
-        $element['image_link'] = array(
-          '#title' => t('Link image to'),
-          '#type' => 'select',
-          '#default_value' => $settings['image_link'],
-          '#empty_option' => t('Nothing'),
-          '#options' => $link_types,
-        );
-      }
       break;
   }
   return $element;
@@ -125,7 +80,6 @@ function jw_player_field_formatter_settings_form($field, $instance, $view_mode, 
 function jw_player_field_formatter_settings_summary($field, $instance, $view_mode) {
   $display = $instance['display'][$view_mode];
   $settings = $display['settings'];
-  $image_module_exists = module_exists('image');
 
   $summary = array();
   $presets = jw_player_preset_load();
@@ -140,18 +94,7 @@ function jw_player_field_formatter_settings_summary($field, $instance, $view_mod
     }
   }
   else {
-    $summary[] = t('Default preset');
-  }
-
-  if ($image_module_exists) {
-    $link_types = array(
-      'content' => t('Linked to content'),
-      'file' => t('Linked to file'),
-    );
-    // Display this setting only if image is linked.
-    if (isset($settings['image_link']) && isset($link_types[$settings['image_link']])) {
-      $summary[] = $link_types[$settings['image_link']];
-    }
+    $summary[] = t('No preset selected');
   }
 
   return implode('<br />', $summary);
@@ -162,54 +105,24 @@ function jw_player_field_formatter_settings_summary($field, $instance, $view_mod
  */
 function jw_player_field_formatter_view($entity_type, $entity, $field, $instance, $langcode, $items, $display) {
   $element = array();
-  $image_module_exists = module_exists('image');
 
-  // process files for theme functions
-  $files = array();
-  foreach ($items as $delta => $item) {
-    $files[$delta] = (object) $item;
-    if (!empty($item['preview_image_fid']) && ($preview_image = file_load($item['preview_image_fid']))) {
-      $files[$delta]->preview_image = $preview_image;
+  if ($display['type'] == 'jw_player') {
+    // Process files for theme functions
+    $files = array();
+    foreach ($items as $delta => $item) {
+      $files[$delta] = (object) $item;
+    }
+    // Create a file url to pass to
+    $file_url = file_create_url($item['uri']);
+
+    foreach ($files as $delta => $file) {
+      $element[$delta] = array(
+        '#theme' => 'jw_player',
+        '#file_url' => $file_url,
+        '#preset' => $display['settings']['jwplayer_preset'],
+      );
     }
   }
-
-  // player formatters
-  $image_style = !empty($display['settings']['image_style']) ? $display['settings']['image_style'] : '';
-  switch ($display['type']) {
-    case 'jw_player':
-      foreach ($files as $delta => $file) {
-        $element[$delta] = array(
-          '#theme' => 'jw_player_formatter',
-          '#files' => array($file),
-          '#preset' => $display['settings']['jwplayer_preset'],
-          '#image_style' => $image_style,
-        );
-      }
-      break;
-
-    case 'jw_player_playlist':
-      $element[0] = array(
-        '#theme' => 'jw_player_formatter',
-        '#files' => $files,
-        '#preset' => $display['settings']['jwplayer_preset'],
-        '#image_style' => $image_style,
-      );
-      break;
-
-    default:
-      // image formatter if the formatter involves a link.
-      if ($image_module_exists && isset($display['settings']['image_link']) && in_array($display['settings']['image_link'], array('content', 'file'))) {
-        $preview_items = array();
-        foreach ($files as $delta => $file) {
-          if (isset($file->preview_image)) {
-            $preview_items[$delta] = (array) $file->preview_image;
-          }
-        }
-        return image_field_formatter_view($entity_type, $entity, $field, $instance, $langcode, $preview_items, $display);
-      }
-      break;
-  }
-
   return $element;
 }
 
@@ -286,11 +199,57 @@ function jw_player_default_settings() {
       'flashplayer' => file_create_url($player_path . '/player.swf'),
       'width' => '640',
       'height' => '480',
+      'autoplay' => FALSE,
       'controlbar' => 'bottom',
-      'playlist.position' => 'right',
-      'playlist.size' => '180',
     );
   }
 
   return $defaults;
+}
+
+/**
+ * Implements hook_preprocess_HOOK().
+ */
+function jw_player_preprocess_jw_player(&$variables) {
+  $player_path = libraries_get_path('jwplayer');
+
+  // Load defaults as the starting point.
+  $default_settings = jw_player_default_settings();
+
+  // Load preset if set.
+  $preset_settings = array();
+
+  if (!empty($variables['preset'])) {
+    $preset = jw_player_preset_load($variables['preset']);
+    $preset_settings = $preset['settings'];
+  }
+
+  // Merge all variables together. Preset settings take priority over defaults,
+  // variables passed directly to the theme function take priority over both.
+  $variables = array_merge($default_settings, $preset_settings, $variables);
+
+  // Give each instance of the player a unique id.
+  $variables['html_id'] = drupal_html_id('jw_player');
+
+  // Resolve skin url
+  $skin = !empty($variables['skin']) ? jw_player_skins($variables['skin']) : '';
+  $variables['skin_url'] = !empty($skin) ? file_create_url($skin->uri) : '';
+
+  // Copy player variables into their own array to be set as javascript configuration.
+  // @todo Bad smell here. Refactoring needed.
+  $player_variables = array('width', 'height', 'controlbar', 'playlist.position', 'playlist.size', 'skin', 'autoplay');
+  foreach ($player_variables as $key) {
+    if (!empty($variables[$key])) {
+      $variables['config'][$key] = $variables[$key];
+    }
+  }
+
+  // Set default player mode.
+  // @todo Make player mode configurable.
+  $variables['config']['modes'] = array(array('type' => 'html5'), array('type' => 'flash', 'src' => $player_path . 'player.swf'));
+
+  // Add dependent resources
+  drupal_add_js($player_path . '/jwplayer.js'); // Add library
+  drupal_add_js(drupal_get_path('module', 'jw_player') . '/jw_player.js'); // Attaches JW Player element
+  drupal_add_js(array('jw_player' => array($variables['html_id'] => $variables['config'])), 'setting'); // Player settings
 }

@@ -119,32 +119,36 @@ function jw_player_ctools_export_ui_form(&$form, &$form_state) {
     '#weight' => 7,
   );
 
-  // playlist settings
-  $form['settings']['playlist.position'] = array(
-    '#title' => t('Playlist Position'),
-    '#type' => 'select',
-    '#description' => t('The positon of the playlist'),
-    '#default_value' => !empty($settings['playlist.position']) ? $settings['playlist.position']: 'right',
-    '#options' => array(
-      'none' => t('None'),
-      'bottom' => t('Bottom'),
-      'top' => t('Top'),
-      'right' => t('Right'),
-      'left' => t('Left'),
-      'over' => t('Over')
-    ),
-    '#weight' => 8,
-  );
+  // Playlist settings
+  // @todo Playlist support was removed during refactoring and is supported
+  // differently using the HTML5 version of JW Player. Support needs to be
+  // brought back.
 
-   $form['settings']['playlist.size'] = array(
-    '#title' => t('Playlist Width'),
-    '#type' => 'textfield',
-    '#description' => t('The playlist width in pixels.'),
-    '#default_value' => !empty($settings['playlist.size']) ? $settings['playlist.size']: '180',
-    '#field_suffix' => ' ' . t('pixels'),
-    '#size' => 10,
-    '#weight' => 9,
-  );
+  // $form['settings']['playlist.position'] = array(
+  //   '#title' => t('Playlist Position'),
+  //   '#type' => 'select',
+  //   '#description' => t('The positon of the playlist'),
+  //   '#default_value' => !empty($settings['playlist.position']) ? $settings['playlist.position']: 'right',
+  //   '#options' => array(
+  //     'none' => t('None'),
+  //     'bottom' => t('Bottom'),
+  //     'top' => t('Top'),
+  //     'right' => t('Right'),
+  //     'left' => t('Left'),
+  //     'over' => t('Over')
+  //   ),
+  //   '#weight' => 8,
+  // );
+  // 
+  //  $form['settings']['playlist.size'] = array(
+  //   '#title' => t('Playlist Width'),
+  //   '#type' => 'textfield',
+  //   '#description' => t('The playlist width in pixels.'),
+  //   '#default_value' => !empty($settings['playlist.size']) ? $settings['playlist.size']: '180',
+  //   '#field_suffix' => ' ' . t('pixels'),
+  //   '#size' => 10,
+  //   '#weight' => 9,
+  // );
 
   // skins
   $skin_options = array();

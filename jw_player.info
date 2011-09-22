@@ -6,4 +6,3 @@ dependencies[] = file
 dependencies[] = libraries
 dependencies[] = ctools
 files[] = jw_player.module
-files[] = jw_player.theme.inc
