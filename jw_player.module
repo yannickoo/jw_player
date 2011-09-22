@@ -35,7 +35,7 @@ function jw_player_field_formatter_info() {
   $formatters = array(
     'jw_player' => array(
       'label' => t('JW player'),
-      'field types' => array('file', 'media'),
+      'field types' => array('file'),
       'settings' => array(
         'jwplayer_preset' => '',
       ),
