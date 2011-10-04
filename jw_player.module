@@ -26,6 +26,7 @@ function jw_player_theme() {
         'file_url' => '',
         'preset' => '',
         'file_mime' => '',
+        'options' => array(),
       ),
       'template' => 'theme/jw_player',
     ),
@@ -230,9 +231,16 @@ function jw_player_preprocess_jw_player(&$variables) {
     $preset_settings = $preset['settings'];
   }
 
+  // Get any preset override options that were sent through the formatter or theme call
+  $options = array();
+  if (isset($variables['options'])) {
+    $options = $variables['options'];
+    unset($variables['options']);
+  }
+
   // Merge all variables together. Preset settings take priority over defaults,
   // variables passed directly to the theme function take priority over both.
-  $variables = array_merge($default_settings, $preset_settings, $variables);
+  $variables = array_merge($default_settings, $preset_settings, $options, $variables);
 
   // Give each instance of the player a unique id.
   $variables['html_id'] = drupal_html_id('jw_player');
