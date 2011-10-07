@@ -179,6 +179,7 @@ function jw_player_ctools_plugin_directory($module, $type) {
  * @return array
  */
 function jw_player_preset_load($machine_name = NULL){
+  ctools_include('export');
   if (isset($machine_name)){
     $items = ctools_export_crud_load('jwplayer_preset', $machine_name);
 
