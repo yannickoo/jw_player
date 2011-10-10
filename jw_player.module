@@ -65,11 +65,30 @@ function jw_player_field_formatter_settings_form($field, $instance, $view_mode, 
       foreach (jw_player_preset_load() as $preset => $item) {
         $options[$preset] = $item['preset_name'];
       }
+
+      $element['no_preset_message'] = array(
+        '#markup' => '<div class="messages warning">' . t('No preset is available yet. You need to create a preset to proceed.') . '</div>',
+        '#access' => empty($options),
+      );
+
+      $element['links'] = array(
+        '#theme' => 'links',
+        '#links' => array(
+          array(
+            'title' => t('Manage presets'),
+            'href' => 'admin/config/media/jw_player/add',
+            'query' => array(
+              'destination' => ltrim($form_state['complete form']['#action'], '/'),
+            ),
+          ),
+        ),
+      );
       $element['jwplayer_preset'] = array(
         '#title' => t('JW Player presets'),
         '#type' => 'select',
         '#default_value' => ($settings['jwplayer_preset']) ?  $settings['jwplayer_preset'] : FALSE,
         '#options' => $options,
+        '#access' => !empty($options),
       );
       break;
 
