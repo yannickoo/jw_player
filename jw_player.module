@@ -23,8 +23,9 @@ function jw_player_theme() {
   return array(
     'jw_player' => array(
       'variables' => array(
-        'file_url' => '',
+        'file_object' => NULL,
         'preset' => '',
+        'file_url' => '',
         'file_mime' => '',
         'options' => array(),
       ),
@@ -136,16 +137,11 @@ function jw_player_field_formatter_view($entity_type, $entity, $field, $instance
     foreach ($items as $delta => $item) {
       $files[$delta] = (object) $item;
     }
-    // Create a file url to pass to
-    $file_url = file_create_url($item['uri']);
-    $file_mime = $item['filemime'];
-
     foreach ($files as $delta => $file) {
       $element[$delta] = array(
         '#theme' => 'jw_player',
-        '#file_url' => $file_url,
+        '#file_object' => $file,
         '#preset' => $display['settings']['jwplayer_preset'],
-        '#file_mime' => $file_mime,
       );
     }
   }
@@ -238,6 +234,17 @@ function jw_player_default_settings() {
  * Implements hook_preprocess_HOOK().
  */
 function jw_player_preprocess_jw_player(&$variables) {
+  // If a file object has been passed grab the file URL and MIME from it,
+  // but only if the values haven't already been set.
+  if (isset($variables['file_object'])) {
+    if (empty($variables['file_url'])) {
+      $variables['file_url'] = file_create_url($variables['file_object']->uri);
+    }
+    if (empty($variables['file_mime'])) {
+      $variables['file_mime'] = $variables['file_object']->filemime;
+    }
+  }
+
   $player_path = libraries_get_path('jwplayer');
 
   // Load defaults as the starting point.
