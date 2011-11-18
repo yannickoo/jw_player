@@ -49,7 +49,7 @@ function jw_player_ctools_export_ui_form(&$form, &$form_state) {
     '#size' => 20,
     '#maxlength' => 255,
     '#title' => t('Preset name'),
-    '#description' => t('Enter name for the preet.'),
+    '#description' => t('Enter name for the preset.'),
     '#default_value' =>  $preset->preset_name,
     '#required' => true,
     '#weight' => 0,
@@ -139,7 +139,7 @@ function jw_player_ctools_export_ui_form(&$form, &$form_state) {
   //   ),
   //   '#weight' => 8,
   // );
-  // 
+  //
   //  $form['settings']['playlist.size'] = array(
   //   '#title' => t('Playlist Width'),
   //   '#type' => 'textfield',
@@ -163,6 +163,52 @@ function jw_player_ctools_export_ui_form(&$form, &$form_state) {
     '#empty_option' => t('None (default skin)'),
     '#options' => $skin_options,
   );
+
+  // Add preset plugin settings
+  foreach (jw_player_preset_plugins() as $plugin => $info) {
+    $form['settings']['plugins']['#weight'] = 8;
+
+    // Fieldset per plugin
+    $form['settings']['plugins'][$plugin] = array(
+      '#type' => 'fieldset',
+      '#title' => t($info['name']),
+      '#description' => t($info['desciption']),
+      '#tree' => TRUE,
+      '#weight' => 10,
+      '#collapsible' => TRUE,
+      '#collapsed' => FALSE,
+    );
+
+    // Enable/disable plugin setting
+    $form['settings']['plugins'][$plugin]['enable'] = array(
+      '#type' => 'checkbox',
+      '#title' => t('Enable'),
+      '#description' => t($info['desciption']),
+      '#default_value' => isset($settings['plugins'][$plugin]['enable']) ? $settings['plugins'][$plugin]['enable'] : FALSE,
+    );
+
+    // Add each config option specified in the plugin
+    // Config options should be in FAPI structure
+    if (is_array($info['config options']) and !empty($info['config options'])) {
+      foreach ($info['config options'] as $option => $element) {
+        // Note: Each config option must be a complete FAPI element, except for the #title which is optional.
+        // If the #title is not provided, we use the name of the config option as the title
+        if (!isset($element['#title'])) {
+          $element['#title'] = ucfirst($option);
+        }
+        // Alter the default value if a setting has been saved previously
+        $element['#default_value'] = !empty($settings['plugins'][$plugin][$option]) ? $settings['plugins'][$plugin][$option] : $element['#default_value'];
+        // Make the whole element visible only if the plugin is checked (enabled)
+        $element['#states'] = array(
+          'visible' => array(
+               'input[name="settings[plugins][' . $plugin .'][enable]"]' => array('checked' => TRUE),
+              ),
+        );
+        // Add the element to the FAPI structure
+        $form['settings']['plugins'][$plugin][$option] = $element;
+      }
+    }
+  }
 
   $form['settings']['autoplay'] = array(
     '#title' => t('Autoplay'),
