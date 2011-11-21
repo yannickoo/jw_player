@@ -5,6 +5,23 @@
  */
 
 /**
+ * Implements hook_menu().
+ */
+function jw_player_menu() {
+  $items['admin/config/media/jw_player/settings'] = array(
+    'title' => 'Settings',
+    'description' => 'JW Player general settings',
+    'type' => MENU_LOCAL_TASK,
+    'access arguments' => array('administer JW Player presets'),
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('jw_player_settings_form'),
+    'file' => 'jw_player.admin.inc'
+  );
+
+  return $items;
+}
+
+/**
  * Implements hook_permission().
  */
 function jw_player_permission() {
@@ -269,8 +286,10 @@ function jw_player_preprocess_jw_player(&$variables) {
   // variables passed directly to the theme function take priority over both.
   $variables = array_merge($default_settings, $preset_settings, $options, $variables);
 
-  // Give each instance of the player a unique id.
-  $variables['html_id'] = drupal_html_id('jw_player');
+  // Give each instance of the player a unique id. A random hash is used in
+  // place of drupal_html_id() due to potentially conflicting ids in cases where
+  // the entire output of the theme function is cached.
+  $variables['html_id'] = md5(rand());
 
   // Create a configuration array which will be passed to JWPlayer's JavaScript.
   $variables['config']['file'] = $variables['file_url'];
@@ -308,10 +327,33 @@ function jw_player_preprocess_jw_player(&$variables) {
     }
   }
 
-  // Add dependent resources
-  drupal_add_js($player_path . '/jwplayer.js'); // Add library
-  drupal_add_js(drupal_get_path('module', 'jw_player') . '/jw_player.js'); // Attaches JW Player element
-  drupal_add_js(array('jw_player' => array($variables['html_id'] => $variables['config'])), 'setting'); // Player settings
+  // If inline option is selected, add the js code inline. It will be printed
+  // in the tpl file. This is needed so that the videos still have their config
+  // after page is cached. In this case the player itself is loaded on all pages
+  // via hook_init().
+  if (variable_get('jw_player_inline_js', FALSE)) {
+    $variables['jw_player_inline_js_code'] = stripslashes(json_encode($variables['config']));
+  }
+  // If inline is not selected, add all relevant Javascript now.
+  else {
+    drupal_add_js($player_path . '/jwplayer.js'); // Add library
+    drupal_add_js(drupal_get_path('module', 'jw_player') . '/jw_player.js'); // Attaches JW Player element
+    drupal_add_js(array('jw_player' => array($variables['html_id'] => $variables['config'])), 'setting'); // Player settings
+  }
+}
+
+/**
+ * Implements hook_init().
+ *
+ * If the player configuration is set to print inline, load the JW Player
+ * javascript on all pages. Due to caching one never knows when it will be
+ * needed.
+ */
+function jw_player_init(){
+  if (variable_get('jw_player_inline_js', FALSE)) {
+    $player_path = libraries_get_path('jwplayer');
+    drupal_add_js($player_path . '/jwplayer.js'); // Add library
+  }
 }
 
 /**

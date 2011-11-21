@@ -8,6 +8,7 @@
  * - $width: Width of the video player
  * - $height: Height of the video player
  * - $file_url: The url of the file to be played
+ * - $jw_player_inline_js_code : JSON data with configuration settings for the video player
  *
  * @see template_preprocess_jw_player()
  */
@@ -17,3 +18,8 @@
     <source src="<?php print $file_url ?>"<?php if (isset($file_mime)): ?> type="<?php print $file_mime ?>"<?php endif ?> />
   </video>
 </div>
+<?php if(isset($jw_player_inline_js_code)): ?>
+  <script type="text/javascript">
+    jwplayer('<?php print $html_id ?>').setup(<?php print $jw_player_inline_js_code?>);
+  </script>
+<?php endif ?>
