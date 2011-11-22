@@ -27,20 +27,20 @@ $plugin = array(
 );
 
 /**
- * Implements hook_ctools_export_ui_form
+ * Implements hook_ctools_export_ui_form().
  */
 function jw_player_ctools_export_ui_form(&$form, &$form_state) {
   $preset = $form_state['item'];
   $settings = $preset->settings;
 
   /**
-   * This is a Hack, CTools adds a hierarchy for export_key in form of
-   * $form['info][$export_key]
-   * see Line no: 1007 of ctools/plugins/export_ui/ctools_export_ui.class.php
+   * This is a hack. CTools adds a hierarchy for export_key in form of
+   * $form['info][$export_key] (see line 1007 of 
+   * ctools/plugins/export_ui/ctools_export_ui.class.php).
    *
-   * FAPI machine names object doesn't seem to work well with fields present in
-   * differnt levels of hierarchy, Hence we move the fields over to
-   * same hierarchical level.
+   * The FAPI machine name object doesn't seem to work well with fields present
+   * in different levels of hierarchy, hence we move the fields over to the same
+   * level in the hierarchy.
    */
   // $form['preset_name'] = $form['info']['preset_name'];
   unset($form['info']);
@@ -64,7 +64,7 @@ function jw_player_ctools_export_ui_form(&$form, &$form_state) {
       'source' => array('preset_name'),
     ),
     '#weight' => 1,
-    '#description' => t('Enter the name to the new page It must be unique and contain only alphanumeric characters and underscores.'),
+    '#description' => t('Enter the machine name for the preset. It must be unique and contain only alphanumeric characters and underscores.'),
   );
 
   $form['settings'] = array(
@@ -77,8 +77,8 @@ function jw_player_ctools_export_ui_form(&$form, &$form_state) {
    $form['description'] = array(
      '#type' => 'textarea',
      '#size' => 10,
-     '#title' => t('description'),
-     '#description' => t('Summary for preset'),
+     '#title' => t('Description'),
+     '#description' => t('Summary for the preset.'),
      '#default_value' => $preset->description,
      '#weight' => 2,
    );
@@ -86,8 +86,8 @@ function jw_player_ctools_export_ui_form(&$form, &$form_state) {
   $form['settings']['width'] = array(
     '#type' => 'textfield',
     '#size' => 10,
-    '#title' => t('width'),
-    '#description' => t('Enter width for player.'),
+    '#title' => t('Width'),
+    '#description' => t('Enter the width for this player.'),
     '#field_suffix' => ' ' . t('pixels'),
     '#default_value' => $settings['width'],
     '#required' => true,
@@ -98,7 +98,7 @@ function jw_player_ctools_export_ui_form(&$form, &$form_state) {
     '#type' => 'textfield',
     '#size' => 10,
     '#title' => t('Height'),
-    '#description' => t('Enter height for player'),
+    '#description' => t('Enter the height for this player.'),
     '#field_suffix' => ' ' . t('pixels'),
     '#default_value' => $settings['height'],
     '#required' => true,
@@ -108,7 +108,7 @@ function jw_player_ctools_export_ui_form(&$form, &$form_state) {
   $form['settings']['controlbar'] = array(
     '#title' => t('Controlbar Position'),
     '#type' => 'select',
-    '#description' => t('The positon of the controlbar'),
+    '#description' => t('Where the controlbar should be positioned.'),
     '#default_value' => !empty($settings['controlbar']) ? $settings['controlbar']: 'none',
     '#options' => array(
       'none' => t('None'),
