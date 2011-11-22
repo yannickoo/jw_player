@@ -77,7 +77,7 @@ function jw_player_ctools_export_ui_form(&$form, &$form_state) {
    $form['description'] = array(
      '#type' => 'textarea',
      '#size' => 10,
-     '#title' => t('decription'),
+     '#title' => t('description'),
      '#description' => t('Summary for preset'),
      '#default_value' => $preset->description,
      '#weight' => 2,
@@ -172,7 +172,7 @@ function jw_player_ctools_export_ui_form(&$form, &$form_state) {
     $form['settings']['plugins'][$plugin] = array(
       '#type' => 'fieldset',
       '#title' => t($info['name']),
-      '#description' => t($info['desciption']),
+      '#description' => t($info['description']),
       '#tree' => TRUE,
       '#weight' => 10,
       '#collapsible' => TRUE,
@@ -183,7 +183,7 @@ function jw_player_ctools_export_ui_form(&$form, &$form_state) {
     $form['settings']['plugins'][$plugin]['enable'] = array(
       '#type' => 'checkbox',
       '#title' => t('Enable'),
-      '#description' => t($info['desciption']),
+      '#description' => t($info['description']),
       '#default_value' => isset($settings['plugins'][$plugin]['enable']) ? $settings['plugins'][$plugin]['enable'] : FALSE,
     );
 
