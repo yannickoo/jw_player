@@ -1,7 +1,7 @@
 <?php
-
 /**
- * Define the CTools Export UI plugin.
+ * @file
+ * Defines the CTools Export UI plugin for JW Player presets.
  */
 $plugin = array(
   'schema' => 'jwplayer_preset',
@@ -18,8 +18,6 @@ $plugin = array(
   'title singular proper' => t('JW Player preset'),
   'title plural proper' => t('JW Player presets'),
 
-  // - Abbreviated. - //
-
   'form' => array(
     'settings' => 'jw_player_ctools_export_ui_form',
     'validate' => 'jw_player_ctools_export_ui_form_validate',
@@ -33,17 +31,14 @@ function jw_player_ctools_export_ui_form(&$form, &$form_state) {
   $preset = $form_state['item'];
   $settings = $preset->settings;
 
-  /**
-   * This is a hack. CTools adds a hierarchy for export_key in form of
-   * $form['info][$export_key] (see line 1007 of 
-   * ctools/plugins/export_ui/ctools_export_ui.class.php).
-   *
-   * The FAPI machine name object doesn't seem to work well with fields present
-   * in different levels of hierarchy, hence we move the fields over to the same
-   * level in the hierarchy.
-   */
-  // $form['preset_name'] = $form['info']['preset_name'];
+   // This is a hack. CTools adds a hierarchy for export_key in form of
+   // $form['info][$export_key] (see line 1007 of
+   // ctools/plugins/export_ui/ctools_export_ui.class.php).
+   // The FAPI machine name object doesn't seem to work well with fields present
+   // in different levels of hierarchy, hence we move the fields over to the same
+   // level in the hierarchy.
   unset($form['info']);
+
   $form['preset_name'] = array(
     '#type' => 'textfield',
     '#size' => 20,
@@ -161,7 +156,7 @@ function jw_player_ctools_export_ui_form(&$form, &$form_state) {
   //   '#weight' => 9,
   // );
 
-  // skins
+  // Skins.
   $skin_options = array();
   foreach (jw_player_skins() as $skin) {
     $skin_options[$skin->name] = ucfirst($skin->name);
@@ -175,11 +170,11 @@ function jw_player_ctools_export_ui_form(&$form, &$form_state) {
     '#options' => $skin_options,
   );
 
-  // Add preset plugin settings
+  // Add preset plugin settings.
   foreach (jw_player_preset_plugins() as $plugin => $info) {
     $form['settings']['plugins']['#weight'] = 8;
 
-    // Fieldset per plugin
+    // Fieldset per plugin.
     $form['settings']['plugins'][$plugin] = array(
       '#type' => 'fieldset',
       '#title' => t($info['name']),
@@ -190,7 +185,7 @@ function jw_player_ctools_export_ui_form(&$form, &$form_state) {
       '#collapsed' => FALSE,
     );
 
-    // Enable/disable plugin setting
+    // Enable/disable plugin setting.
     $form['settings']['plugins'][$plugin]['enable'] = array(
       '#type' => 'checkbox',
       '#title' => t('Enable'),
@@ -198,24 +193,25 @@ function jw_player_ctools_export_ui_form(&$form, &$form_state) {
       '#default_value' => isset($settings['plugins'][$plugin]['enable']) ? $settings['plugins'][$plugin]['enable'] : FALSE,
     );
 
-    // Add each config option specified in the plugin
-    // Config options should be in FAPI structure
+    // Add each config option specified in the plugin. Config options should be
+    // in FAPI structure.
     if (is_array($info['config options']) and !empty($info['config options'])) {
       foreach ($info['config options'] as $option => $element) {
-        // Note: Each config option must be a complete FAPI element, except for the #title which is optional.
-        // If the #title is not provided, we use the name of the config option as the title
+        // Note: Each config option must be a complete FAPI element, except for
+        // the #title which is optional. If the #title is not provided, we use
+        // the name of the config option as the title.
         if (!isset($element['#title'])) {
           $element['#title'] = ucfirst($option);
         }
-        // Alter the default value if a setting has been saved previously
+        // Alter the default value if a setting has been saved previously.
         $element['#default_value'] = !empty($settings['plugins'][$plugin][$option]) ? $settings['plugins'][$plugin][$option] : $element['#default_value'];
-        // Make the whole element visible only if the plugin is checked (enabled)
+        // Make the whole element visible only if the plugin is checked (enabled).
         $element['#states'] = array(
           'visible' => array(
                'input[name="settings[plugins][' . $plugin .'][enable]"]' => array('checked' => TRUE),
               ),
         );
-        // Add the element to the FAPI structure
+        // Add the element to the FAPI structure.
         $form['settings']['plugins'][$plugin][$option] = $element;
       }
     }

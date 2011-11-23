@@ -76,10 +76,10 @@ function jw_player_field_formatter_settings_form($field, $instance, $view_mode, 
   $display = $instance['display'][$view_mode];
   $settings = $display['settings'];
 
-  // formatter types
+  // Formatter types.
   switch ($display['type']) {
     case 'jw_player':
-      // Load existing presets within the system
+      // Load existing presets within the system.
       foreach (jw_player_preset_load() as $preset => $item) {
         $options[$preset] = $item['preset_name'];
       }
@@ -149,7 +149,7 @@ function jw_player_field_formatter_view($entity_type, $entity, $field, $instance
   $element = array();
 
   if ($display['type'] == 'jw_player') {
-    // Process files for theme functions
+    // Process files for the theme function.
     $files = array();
     foreach ($items as $delta => $item) {
       $files[$delta] = (object) $item;
@@ -166,7 +166,7 @@ function jw_player_field_formatter_view($entity_type, $entity, $field, $instance
 }
 
 /**
- * Retrieves all available skins,
+ * Retrieves all available skins.
  */
 function jw_player_skins($name = NULL) {
   $skins = &drupal_static(__FUNCTION__);
@@ -206,7 +206,7 @@ function jw_player_ctools_plugin_directory($module, $type) {
 }
 
 /**
- * Load a given preset(s)
+ * Load the given preset(s).
  * @param string $machine_name
  * @return array
  */
@@ -215,7 +215,8 @@ function jw_player_preset_load($machine_name = NULL){
   if (isset($machine_name)){
     $items = ctools_export_crud_load('jwplayer_preset', $machine_name);
 
-    // CTools returns an object, so we explictly typecast it to array before returning
+    // CTools returns an object, so we explictly typecast it to array before
+    // returning.
     $items =  (array) $items;
   }
   else {
@@ -228,7 +229,8 @@ function jw_player_preset_load($machine_name = NULL){
 }
 
 /**
- * Returns default settings
+ * Returns the default settings for JW Player. Used in cases where a preset is
+ * not provided when the JW Player theme function is called.
  */
 function jw_player_default_settings() {
   $defaults = &drupal_static(__FUNCTION__);
@@ -275,7 +277,8 @@ function jw_player_preprocess_jw_player(&$variables) {
     $preset_settings = $preset['settings'];
   }
 
-  // Get any preset override options that were sent through the formatter or theme call
+  // Get any preset override options that were sent through the formatter or
+  // theme call.
   $options = array();
   if (isset($variables['options'])) {
     $options = $variables['options'];
@@ -298,7 +301,8 @@ function jw_player_preprocess_jw_player(&$variables) {
   $skin = !empty($variables['skin']) ? jw_player_skins($variables['skin']) : '';
   $variables['skin_url'] = !empty($skin) ? file_create_url($skin->uri) : '';
 
-  // Copy player variables into their own array to be set as javascript configuration.
+  // Copy player variables into their own array to be set as JavaScript
+  // configuration.
   // @todo Bad smell here. Refactoring needed.
   $player_variables = array('width', 'height', 'controlbar', 'playlist.position', 'playlist.size', 'skin', 'autoplay');
   foreach ($player_variables as $key) {
@@ -330,7 +334,8 @@ function jw_player_preprocess_jw_player(&$variables) {
     }
   }
 
-  // Copy over all enabled plugins into the 'config' section as this is the key that is sent over to the player
+  // Copy over all enabled plugins into the 'config' section as this is the key
+  // that is sent over to the player.
   if (!empty($variables['plugins'])) {
     foreach ($variables['plugins'] as $plugin => $info) {
       if (!$info['enable']) {
@@ -347,7 +352,7 @@ function jw_player_preprocess_jw_player(&$variables) {
   if (variable_get('jw_player_inline_js', FALSE)) {
     $variables['jw_player_inline_js_code'] = stripslashes(json_encode($variables['config']));
   }
-  // If inline is not selected, add all relevant Javascript now.
+  // If inline is not selected, add all relevant JavaScript now.
   else {
     drupal_add_js($player_path . '/jwplayer.js'); // Add library
     drupal_add_js(drupal_get_path('module', 'jw_player') . '/jw_player.js'); // Attaches JW Player element
@@ -359,7 +364,7 @@ function jw_player_preprocess_jw_player(&$variables) {
  * Implements hook_init().
  *
  * If the player configuration is set to print inline, load the JW Player
- * javascript on all pages. Due to caching one never knows when it will be
+ * JavaScript on all pages. Due to caching one never knows when it will be
  * needed.
  */
 function jw_player_init(){
@@ -370,7 +375,7 @@ function jw_player_init(){
 }
 
 /**
- * Retrieves all available preset plugins,
+ * Retrieves all available preset plugins.
  */
 function jw_player_preset_plugins($name = NULL) {
   $plugins = &drupal_static(__FUNCTION__);
