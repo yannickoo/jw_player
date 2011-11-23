@@ -307,8 +307,10 @@ function jw_player_preprocess_jw_player(&$variables) {
     }
   }
 
-  // Set default player mode.
-  // @todo Make player mode configurable.
+  // Initalize the player modes. The order of this array determines which
+  // playback mode will be tried first before the browser falls back to the next
+  // option. The default is html5 first, but this can be overridden by a preset
+  // (see the code directly below).
   $variables['config']['modes'] = array(
     array('type' => 'html5'),
     array(
@@ -316,6 +318,17 @@ function jw_player_preprocess_jw_player(&$variables) {
       'src' => file_create_url($player_path . '/player.swf'),
     ),
   );
+
+  // If the preset has the primary mode set, modify the modes array so that it
+  // comes first.
+  if (isset($variables['mode'])) {
+    foreach ($variables['config']['modes'] as $key => $value) {
+      if ($value['type'] == $variables['mode']) {
+        unset($variables['config']['modes'][$key]);
+        array_unshift($variables['config']['modes'], $value);
+      }
+    }
+  }
 
   // Copy over all enabled plugins into the 'config' section as this is the key that is sent over to the player
   if (!empty($variables['plugins'])) {

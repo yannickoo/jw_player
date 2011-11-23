@@ -83,6 +83,17 @@ function jw_player_ctools_export_ui_form(&$form, &$form_state) {
     '#weight' => 5,
    );
 
+  $form['settings']['mode'] = array(
+    '#type' => 'radios',
+    '#title' => t('Embed mode'),
+    '#description' => t('Select your primary embed mode. Choosing HTML5 primary means that modern browsers that also support flash will use the HTML5 player first where possible. While this is desirable, the Flash based player supports more features and is generally more reliable.'),
+    '#options' => array(
+      'flash' => t('Flash primary, HTML5 failover'),
+      'html5' => t('HTML5 primary, Flash failover'),
+    ),
+    '#default_value' => isset($settings['mode']) ? $settings['mode'] : 'html5',
+  );
+
   $form['settings']['width'] = array(
     '#type' => 'textfield',
     '#size' => 10,
