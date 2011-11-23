@@ -67,13 +67,6 @@ function jw_player_ctools_export_ui_form(&$form, &$form_state) {
     '#description' => t('Enter the machine name for the preset. It must be unique and contain only alphanumeric characters and underscores.'),
   );
 
-  $form['settings'] = array(
-    '#type' => 'fieldset',
-    '#title' => 'Settings',
-    '#tree' => true,
-    '#weight' => 5,
-   );
-
    $form['description'] = array(
      '#type' => 'textarea',
      '#size' => 10,
@@ -81,6 +74,13 @@ function jw_player_ctools_export_ui_form(&$form, &$form_state) {
      '#description' => t('Summary for the preset.'),
      '#default_value' => $preset->description,
      '#weight' => 2,
+   );
+
+  $form['settings'] = array(
+    '#type' => 'fieldset',
+    '#title' => 'Settings',
+    '#tree' => true,
+    '#weight' => 5,
    );
 
   $form['settings']['width'] = array(
