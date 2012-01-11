@@ -299,7 +299,7 @@ function jw_player_preprocess_jw_player(&$variables) {
 
   // Resolve skin url
   $skin = !empty($variables['skin']) ? jw_player_skins($variables['skin']) : '';
-  $variables['skin_url'] = !empty($skin) ? file_create_url($skin->uri) : '';
+  $variables['skin'] = !empty($skin) ? file_create_url($skin->uri) : '';
 
   // Copy player variables into their own array to be set as JavaScript
   // configuration.
