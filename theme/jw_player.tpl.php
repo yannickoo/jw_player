@@ -4,11 +4,11 @@
  * Display the JW Player.
  *
  * Variables available:
- * - $html_id: Unique id generated for each video
- * - $width: Width of the video player
- * - $height: Height of the video player
- * - $file_url: The url of the file to be played
- * - $jw_player_inline_js_code : JSON data with configuration settings for the video player
+ * - $html_id: Unique id generated for each video.
+ * - $width: Width of the video player.
+ * - $height: Height of the video player.
+ * - $file_url: The url of the file to be played.
+ * - $jw_player_inline_js_code: JSON data with configuration settings for the video player.
  * - $poster: URL to an image to be used for the poster (ie. preview image) for this video.
  *
  * @see template_preprocess_jw_player()
