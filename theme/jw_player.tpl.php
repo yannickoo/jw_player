@@ -9,12 +9,13 @@
  * - $height: Height of the video player
  * - $file_url: The url of the file to be played
  * - $jw_player_inline_js_code : JSON data with configuration settings for the video player
+ * - $poster: URL to an image to be used for the poster (ie. preview image) for this video.
  *
  * @see template_preprocess_jw_player()
  */
 ?>
 <div class="jwplayer-video">
-  <video id="<?php print $html_id ?>" width="<?php print $width ?>" height="<?php print $height ?>" controls="controls" preload="auto">
+  <video id="<?php print $html_id ?>" width="<?php print $width ?>" height="<?php print $height ?>" controls="controls" preload="auto"<?php if(isset($poster)) : ?> poster="<?php print $poster ?>"<?php endif ?>>
     <source src="<?php print $file_url ?>"<?php if (isset($file_mime)): ?> type="<?php print $file_mime ?>"<?php endif ?> />
   </video>
 </div>
