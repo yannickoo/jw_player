@@ -236,9 +236,8 @@ function jw_player_default_settings() {
   $defaults = &drupal_static(__FUNCTION__);
 
   if (!isset($defaults)) {
-    $player_path = libraries_get_path('jwplayer');
     $defaults = array(
-      'flashplayer' => file_create_url($player_path . '/player.swf'),
+      'flashplayer' => file_create_url(libraries_get_path('jwplayer') . '/player.swf'),
       'width' => '640',
       'height' => '480',
       'autoplay' => FALSE,
@@ -263,8 +262,6 @@ function jw_player_preprocess_jw_player(&$variables) {
       $variables['file_mime'] = $variables['file_object']->filemime;
     }
   }
-
-  $player_path = libraries_get_path('jwplayer');
 
   // Load defaults as the starting point.
   $default_settings = jw_player_default_settings();
@@ -319,7 +316,7 @@ function jw_player_preprocess_jw_player(&$variables) {
     array('type' => 'html5'),
     array(
       'type' => 'flash',
-      'src' => file_create_url($player_path . '/player.swf'),
+      'src' => file_create_url(libraries_get_path('jwplayer') . '/player.swf'),
     ),
   );
 
@@ -344,7 +341,14 @@ function jw_player_preprocess_jw_player(&$variables) {
       $variables['config']['plugins'][$plugin] = $info;
     }
   }
+}
 
+/**
+ * Implements hook_process_HOOK().
+ *
+ * Add the JW Player Javascript according to the method selected.
+ */
+function jw_player_process_jw_player(&$variables) {
   // If inline option is selected, add the js code inline. It will be printed
   // in the tpl file. This is needed so that the videos still have their config
   // after page is cached. In this case the player itself is loaded on all pages
@@ -354,7 +358,7 @@ function jw_player_preprocess_jw_player(&$variables) {
   }
   // If inline is not selected, add all relevant JavaScript now.
   else {
-    drupal_add_js($player_path . '/jwplayer.js'); // Add library
+    drupal_add_js(libraries_get_path('jwplayer') . '/jwplayer.js'); // Add library
     drupal_add_js(drupal_get_path('module', 'jw_player') . '/jw_player.js'); // Attaches JW Player element
     drupal_add_js(array('jw_player' => array($variables['html_id'] => $variables['config'])), 'setting'); // Player settings
   }
@@ -369,8 +373,7 @@ function jw_player_preprocess_jw_player(&$variables) {
  */
 function jw_player_init(){
   if (variable_get('jw_player_inline_js', FALSE)) {
-    $player_path = libraries_get_path('jwplayer');
-    drupal_add_js($player_path . '/jwplayer.js'); // Add library
+    drupal_add_js(libraries_get_path('jwplayer') . '/jwplayer.js'); // Add library
   }
 }
 
