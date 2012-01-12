@@ -62,6 +62,7 @@ function jw_player_requirements($phase) {
   // Ensure translations don't break at install time
   $t = get_t();
 
+  drupal_load('module', 'libraries');
   $directory = libraries_get_path('jwplayer');
 
   // Check the exisence of the JW Player Library
