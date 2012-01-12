@@ -79,35 +79,44 @@ function jw_player_field_formatter_settings_form($field, $instance, $view_mode, 
   // Formatter types.
   switch ($display['type']) {
     case 'jw_player':
-      // Load existing presets within the system.
-      foreach (jw_player_preset_load() as $preset => $item) {
-        $options[$preset] = $item['preset_name'];
-      }
+      $presets = jw_player_preset_load();
 
-      $element['no_preset_message'] = array(
-        '#markup' => '<div class="messages warning">' . t('No preset is available yet. You need to create a preset to proceed.') . '</div>',
-        '#access' => empty($options),
-      );
+      // If there are presets prompt the user to select one or create another.
+      // If no, prompt to create a preset.
+      if (!empty($presets)) {
+        foreach (jw_player_preset_load() as $preset => $item) {
+          $options[$preset] = $item['preset_name'];
+        }
 
-      $element['links'] = array(
-        '#theme' => 'links',
-        '#links' => array(
-          array(
-            'title' => t('Manage presets'),
-            'href' => 'admin/config/media/jw_player/add',
-            'query' => array(
-              'destination' => ltrim($form_state['complete form']['#action'], '/'),
+        $element['jwplayer_preset'] = array(
+          '#title' => t('Select preset'),
+          '#type' => 'select',
+          '#default_value' => ($settings['jwplayer_preset']) ?  $settings['jwplayer_preset'] : FALSE,
+          '#options' => $options,
+        );
+
+        $element['links'] = array(
+          '#theme' => 'links',
+          '#links' => array(
+            array(
+              'title' => t('Create new preset'),
+              'href' => 'admin/config/media/jw_player/add',
+              'query' => array(
+                'destination' => ltrim($form_state['complete form']['#action'], '/'),
+              ),
+            ),
+            array(
+              'title' => t('Manage presets'),
+              'href' => 'admin/config/media/jw_player',
             ),
           ),
-        ),
-      );
-      $element['jwplayer_preset'] = array(
-        '#title' => t('JW Player presets'),
-        '#type' => 'select',
-        '#default_value' => ($settings['jwplayer_preset']) ?  $settings['jwplayer_preset'] : FALSE,
-        '#options' => $options,
-        '#access' => !empty($options),
-      );
+        );
+      }
+      else {
+        $element['no_preset_message'] = array(
+          '#markup' => '<div class="messages warning">' . t('No presets are available. You must to <a href="@create">create a preset</a> to proceed.', array('@create' => url('admin/config/media/jw_player/add', array('query' => array('destination' => ltrim($form_state['complete form']['#action'])))))) . '</div>',
+        );
+      }
       break;
 
     default:
@@ -270,10 +279,14 @@ function jw_player_preprocess_jw_player(&$variables) {
 
   // Load preset if set.
   $preset_settings = array();
-
   if (!empty($variables['preset'])) {
     $preset = jw_player_preset_load($variables['preset']);
-    $preset_settings = $preset['settings'];
+    // Additional check to ensure that the preset has actually loaded. This
+    // prevents problems where a preset has been deleted but a field is still
+    // configured to use it.
+    if (!empty($preset_settings)) {
+      $preset_settings = $preset['settings'];
+    }
   }
 
   // Get any preset override options that were sent through the formatter or
