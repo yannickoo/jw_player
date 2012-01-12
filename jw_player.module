@@ -94,16 +94,12 @@ function jw_player_field_formatter_settings_form($field, $instance, $view_mode, 
           '#default_value' => ($settings['jwplayer_preset']) ?  $settings['jwplayer_preset'] : FALSE,
           '#options' => $options,
         );
-
         $element['links'] = array(
           '#theme' => 'links',
           '#links' => array(
             array(
               'title' => t('Create new preset'),
               'href' => 'admin/config/media/jw_player/add',
-              'query' => array(
-                'destination' => ltrim($form_state['complete form']['#action'], '/'),
-              ),
             ),
             array(
               'title' => t('Manage presets'),
@@ -114,7 +110,7 @@ function jw_player_field_formatter_settings_form($field, $instance, $view_mode, 
       }
       else {
         $element['no_preset_message'] = array(
-          '#markup' => '<div class="messages warning">' . t('No presets are available. You must to <a href="@create">create a preset</a> to proceed.', array('@create' => url('admin/config/media/jw_player/add', array('query' => array('destination' => ltrim($form_state['complete form']['#action'])))))) . '</div>',
+          '#markup' => '<div class="messages warning">' . t('No presets are available. You must to <a href="@create">create a preset</a> to proceed.', array('@create' => url('admin/config/media/jw_player/add'))) . '</div>',
         );
       }
       break;
