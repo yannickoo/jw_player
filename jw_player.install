@@ -5,7 +5,7 @@
  */
 
 /**
- * Implements hook_schema
+ * Implements hook_schema().
  */
 function jw_player_schema() {
   $schema['jwplayer_preset'] = array(
@@ -77,7 +77,7 @@ function jw_player_requirements($phase) {
 
     $requirements['jw_player'] = array(
       'title' => $t('JW Player'),
-      'value' => !empty($errors) ? theme('item_list', array('items'=> $errors)) . $t('Please consult INSTALL.txt for installation instructions.') : $t('Installed correctly'),
+      'value' => !empty($errors) ? theme('item_list', array('items' => $errors)) . $t('Please consult INSTALL.txt for installation instructions.') : $t('Installed correctly'),
       'severity' => !empty($errors) ? REQUIREMENT_ERROR : REQUIREMENT_OK,
     );
   }

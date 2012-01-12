@@ -46,7 +46,7 @@ function jw_player_ctools_export_ui_form(&$form, &$form_state) {
     '#title' => t('Preset name'),
     '#description' => t('Enter name for the preset.'),
     '#default_value' =>  $preset->preset_name,
-    '#required' => true,
+    '#required' => TRUE,
     '#weight' => 0,
   );
 
@@ -62,21 +62,21 @@ function jw_player_ctools_export_ui_form(&$form, &$form_state) {
     '#description' => t('Enter the machine name for the preset. It must be unique and contain only alphanumeric characters and underscores.'),
   );
 
-   $form['description'] = array(
-     '#type' => 'textarea',
-     '#size' => 10,
-     '#title' => t('Description'),
-     '#description' => t('Summary for the preset.'),
-     '#default_value' => $preset->description,
-     '#weight' => 2,
-   );
+  $form['description'] = array(
+    '#type' => 'textarea',
+    '#size' => 10,
+    '#title' => t('Description'),
+    '#description' => t('Summary for the preset.'),
+    '#default_value' => $preset->description,
+    '#weight' => 2,
+  );
 
   $form['settings'] = array(
     '#type' => 'fieldset',
     '#title' => 'Settings',
-    '#tree' => true,
+    '#tree' => TRUE,
     '#weight' => 5,
-   );
+  );
 
   $form['settings']['mode'] = array(
     '#type' => 'radios',
@@ -96,7 +96,7 @@ function jw_player_ctools_export_ui_form(&$form, &$form_state) {
     '#description' => t('Enter the width for this player.'),
     '#field_suffix' => ' ' . t('pixels'),
     '#default_value' => $settings['width'],
-    '#required' => true,
+    '#required' => TRUE,
     '#weight' => 5,
   );
 
@@ -107,7 +107,7 @@ function jw_player_ctools_export_ui_form(&$form, &$form_state) {
     '#description' => t('Enter the height for this player.'),
     '#field_suffix' => ' ' . t('pixels'),
     '#default_value' => $settings['height'],
-    '#required' => true,
+    '#required' => TRUE,
     '#weight' => 6,
   );
 
@@ -159,7 +159,7 @@ function jw_player_ctools_export_ui_form(&$form, &$form_state) {
   // Skins.
   $skin_options = array();
   foreach (jw_player_skins() as $skin) {
-    $skin_options[$skin->name] = ucfirst($skin->name);
+    $skin_options[$skin->name] = drupal_ucfirst($skin->name);
   }
 
   $form['settings']['skin'] = array(
@@ -177,8 +177,8 @@ function jw_player_ctools_export_ui_form(&$form, &$form_state) {
     // Fieldset per plugin.
     $form['settings']['plugins'][$plugin] = array(
       '#type' => 'fieldset',
-      '#title' => t($info['name']),
-      '#description' => t($info['description']),
+      '#title' => check_plain($info['name']),
+      '#description' => check_plain($info['description']),
       '#tree' => TRUE,
       '#weight' => 10,
       '#collapsible' => TRUE,
@@ -189,7 +189,7 @@ function jw_player_ctools_export_ui_form(&$form, &$form_state) {
     $form['settings']['plugins'][$plugin]['enable'] = array(
       '#type' => 'checkbox',
       '#title' => t('Enable'),
-      '#description' => t($info['description']),
+      '#description' => check_plain($info['description']),
       '#default_value' => isset($settings['plugins'][$plugin]['enable']) ? $settings['plugins'][$plugin]['enable'] : FALSE,
     );
 
@@ -201,14 +201,14 @@ function jw_player_ctools_export_ui_form(&$form, &$form_state) {
         // the #title which is optional. If the #title is not provided, we use
         // the name of the config option as the title.
         if (!isset($element['#title'])) {
-          $element['#title'] = ucfirst($option);
+          $element['#title'] = drupal_ucfirst($option);
         }
         // Alter the default value if a setting has been saved previously.
         $element['#default_value'] = !empty($settings['plugins'][$plugin][$option]) ? $settings['plugins'][$plugin][$option] : $element['#default_value'];
         // Make the whole element visible only if the plugin is checked (enabled).
         $element['#states'] = array(
           'visible' => array(
-               'input[name="settings[plugins][' . $plugin .'][enable]"]' => array('checked' => TRUE),
+               'input[name="settings[plugins][' . $plugin . '][enable]"]' => array('checked' => TRUE),
               ),
         );
         // Add the element to the FAPI structure.

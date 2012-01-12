@@ -137,7 +137,11 @@ function jw_player_field_formatter_settings_summary($field, $instance, $view_mod
 
     $settings = $presets[$settings['jwplayer_preset']]['settings'];
     foreach ($settings as $key => $val) {
-      $summary[] = t('@key: @val', array('@key' => $key, '@val' => !empty($val) ? $val : t('Default')));
+      // Filter out complex settings in the form of arrays (such as plugins).
+      // @todo Tackle the display of enabled plugins separately.
+      if (!is_array($val)) {
+        $summary[] = t('@key: @val', array('@key' => $key, '@val' => !empty($val) ? $val : t('default')));
+      }
     }
   }
   else {
@@ -215,9 +219,9 @@ function jw_player_ctools_plugin_directory($module, $type) {
  * @param string $machine_name
  * @return array
  */
-function jw_player_preset_load($machine_name = NULL){
+function jw_player_preset_load($machine_name = NULL) {
   ctools_include('export');
-  if (isset($machine_name)){
+  if (isset($machine_name)) {
     $items = ctools_export_crud_load('jwplayer_preset', $machine_name);
 
     // CTools returns an object, so we explictly typecast it to array before
@@ -280,7 +284,7 @@ function jw_player_preprocess_jw_player(&$variables) {
     // Additional check to ensure that the preset has actually loaded. This
     // prevents problems where a preset has been deleted but a field is still
     // configured to use it.
-    if (!empty($preset_settings)) {
+    if (!empty($preset)) {
       $preset_settings = $preset['settings'];
     }
   }
@@ -382,7 +386,7 @@ function jw_player_process_jw_player(&$variables) {
  * JavaScript on all pages. Due to caching one never knows when it will be
  * needed.
  */
-function jw_player_init(){
+function jw_player_init() {
   if (variable_get('jw_player_inline_js', FALSE)) {
     drupal_add_js(libraries_get_path('jwplayer') . '/jwplayer.js'); // Add library
   }

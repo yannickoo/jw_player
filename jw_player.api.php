@@ -15,8 +15,8 @@ function hook_jw_player_plugin_info($preset) {
   $plugins['foo'] = array(
     'name' => t('Foobar'),
     'description' => t('A plugin to do foobar'),
-    // Note: Each option should be in a valid FAPI format, as it is directly 
-    // referenced in the preset settings form, except the '#title' may be 
+    // Note: Each option should be in a valid FAPI format, as it is directly
+    // referenced in the preset settings form, except the '#title' may be
     // omitted for the name of the option to be taken as default.
     'config options' => array(
       'accountid' => array(
