@@ -217,15 +217,17 @@ function jw_player_preset_load($machine_name = NULL){
 
     // CTools returns an object, so we explictly typecast it to array before
     // returning.
-    $items =  (array) $items;
+    return $items = (array) $items;
   }
   else {
     $result = ctools_export_crud_load_all('jwplayer_preset');
-    foreach ($result as $key => $item) {
-      $items[$key] = (array) $item;
+    if (!empty($result)) {
+      foreach ($result as $key => $item) {
+        $items[$key] = (array) $item;
+      }
+      return $items;
     }
   }
-  return $items;
 }
 
 /**
