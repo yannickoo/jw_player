@@ -5,4 +5,4 @@ core = 7.x
 dependencies[] = file
 dependencies[] = libraries
 dependencies[] = ctools
-files[] = jw_player.module
+configure = admin/config/media/jw_player/settings
