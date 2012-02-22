@@ -41,8 +41,8 @@ function jw_player_theme() {
     'jw_player' => array(
       'variables' => array(
         'file_object' => NULL,
-        'preset' => '',
         'file_url' => '',
+        'preset' => '',
         'file_mime' => '',
         'options' => array(),
       ),
@@ -260,9 +260,26 @@ function jw_player_default_settings() {
 }
 
 /**
- * Implements hook_preprocess_HOOK().
+ * Process variables for jw_player.tpl.php.
+ *
+ * The $variables array must contain one (and only one) of the following:
+ * - $file_object The file object you would like JW Player to play.
+ * - $file_url If you would like to play a URL directly instead of a file object
+ *   pass in the URL as a string. This is helpful for playing back the contents
+ *   of link fields, amongst other use cases.
+ *
+ * The following optional variables can also be set:
+ * - $preset (highly recommended!) The machine name of the JW Player preset you
+ *   would like to use. Template preprocessing will take care of applying the
+ *   presets defaults for you.
+ * - $file_mime The file mime for the file. This will be worked out directly if
+ *   $file_object is passed to the theme function. However when passing in
+ *   $file_url it is helpful to supply the mime type as well.
+ * - $options Additional options for the player.
+ *
+ * @see jw_player.tpl.php
  */
-function jw_player_preprocess_jw_player(&$variables) {
+function template_preprocess_jw_player(&$variables) {
   // If a file object has been passed grab the file URL and MIME from it,
   // but only if the values haven't already been set.
   if (isset($variables['file_object'])) {
@@ -373,8 +390,10 @@ function jw_player_process_jw_player(&$variables) {
   }
   // If inline is not selected, add all relevant JavaScript now.
   else {
-    drupal_add_js(libraries_get_path('jwplayer') . '/jwplayer.js'); // Add library
-    drupal_add_js(drupal_get_path('module', 'jw_player') . '/jw_player.js'); // Attaches JW Player element
+    // Add library.
+    drupal_add_js(libraries_get_path('jwplayer') . '/jwplayer.js');
+    // Attaches JW Player element.
+    drupal_add_js(drupal_get_path('module', 'jw_player') . '/jw_player.js');
     drupal_add_js(array('jw_player' => array($variables['html_id'] => $variables['config'])), 'setting'); // Player settings
   }
 }
