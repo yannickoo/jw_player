@@ -41,9 +41,8 @@ function jw_player_theme() {
     'jw_player' => array(
       'variables' => array(
         'file_object' => NULL,
-        'file_url' => '',
+        'sources' => '',
         'preset' => '',
-        'file_mime' => '',
         'options' => array(),
       ),
       'template' => 'theme/jw_player',
@@ -262,33 +261,54 @@ function jw_player_default_settings() {
 /**
  * Process variables for jw_player.tpl.php.
  *
- * The $variables array must contain one (and only one) of the following:
- * - $file_object The file object you would like JW Player to play.
- * - $file_url If you would like to play a URL directly instead of a file object
- *   pass in the URL as a string. This is helpful for playing back the contents
- *   of link fields, amongst other use cases.
+ * @param $variables
+ *   An array that must contain one (and only one) of the following:
+ *   - $file_object The file object you would like JW Player to play.
+ *   - $sources If you would like to play a URL directly instead of a file
+ *     object the URL can be passed directly to the theme function. The file URL
+ *     must be provided within an array. This is helpful for playing back the
+ *     contents of link fields. Optionally the array can contain multiple URLS
+ *     to allow for multiple video formats or adaptive bitrate switching. Here
+ *     is a sample sources array that contains two formats of a video:
  *
- * The following optional variables can also be set:
- * - $preset (highly recommended!) The machine name of the JW Player preset you
- *   would like to use. Template preprocessing will take care of applying the
- *   presets defaults for you.
- * - $file_mime The file mime for the file. This will be worked out directly if
- *   $file_object is passed to the theme function. However when passing in
- *   $file_url it is helpful to supply the mime type as well.
- * - $options Additional options for the player.
+ *     @code
+ *     $variables['sources'] = array(
+ *       array(
+ *         'file_path' => 'http://example.com/video.ogg',
+ *         'file_mime' => 'video/ogg',
+ *       ),
+ *       array(
+ *         'file_path' => 'http://example.com/video.m4v',
+ *         'file_mime' => 'video/mp4',
+ *       ),
+ *     );
+ *     @endcode
+ *
+ *     To use adaptive bitrate switching two additional parameters - with and
+ *     and bitrate are to be provided. *Note that adaptive bitrate is only
+ *     supported in the flash version of the player. In preprocessing the player
+ *     will automatically switch to flash playback mode when two sources are
+ *     supplied with bitrates.
+ *
+ *   The following optional variables can also be set:
+ *   - $preset (highly recommended!) The machine name of the JW Player preset
+ *     you would like to use. Template preprocessing will take care of applying
+ *     the preset's settings for you.
+ *   - $options Additional options for the player. These options will override
+ *     The module's defaults as well as the presets defaults.
  *
  * @see jw_player.tpl.php
  */
 function template_preprocess_jw_player(&$variables) {
-  // If a file object has been passed grab the file URL and MIME from it,
-  // but only if the values haven't already been set.
+  // If a file object has been passed populate the sources array with the
+  // variables derived from it.
   if (isset($variables['file_object'])) {
-    if (empty($variables['file_url'])) {
-      $variables['file_url'] = file_create_url($variables['file_object']->uri);
-    }
-    if (empty($variables['file_mime'])) {
-      $variables['file_mime'] = $variables['file_object']->filemime;
-    }
+    $variables['sources'] = array(
+      array(
+        'file_path' => file_create_url($variables['file_object']->uri),
+        'file_mime' => $variables['file_object']->filemime,
+      )
+    );
   }
 
   // Load defaults as the starting point.
@@ -323,8 +343,24 @@ function template_preprocess_jw_player(&$variables) {
   // the entire output of the theme function is cached.
   $variables['html_id'] = md5(rand());
 
-  // Create a configuration array which will be passed to JWPlayer's JavaScript.
-  $variables['config']['file'] = $variables['file_url'];
+  // Check if there is one or multiple files. If one file then we set 'file', if
+  // there are multiple files we set 'levels'. Note that levels is used for both
+  // multiple video formats as well as for adaptive bitrates.
+  if (count($variables['sources']) > 1) {
+    $variables['config']['levels'] = array();
+    foreach ($variables['sources'] as $source) {
+      $variables['config']['levels'][]['file'] = $source['file_path'];
+      if (isset($source['bitrate'])) {
+        $variables['config']['levels'][]['bitrate'] = $source['bitrate'];
+      }
+      if (isset($source['width'])) {
+        $variables['config']['levels'][]['width'] = $source['width'];
+      }
+    }
+  }
+  else {
+   $variables['config']['file'] = $variables['sources'][0]['file_path'];
+  }
 
   // Resolve skin url
   $skin = !empty($variables['skin']) ? jw_player_skins($variables['skin']) : '';
@@ -385,7 +421,7 @@ function jw_player_process_jw_player(&$variables) {
   // in the tpl file. This is needed so that the videos still have their config
   // after page is cached. In this case the player itself is loaded on all pages
   // via hook_init().
-  if (variable_get('jw_player_inline_js', FALSE)) {
+  if (variable_get('jw_player_inline_js', TRUE)) {
     $variables['jw_player_inline_js_code'] = stripslashes(json_encode($variables['config']));
   }
   // If inline is not selected, add all relevant JavaScript now.

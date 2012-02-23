@@ -7,7 +7,7 @@
  * - $html_id: Unique id generated for each video.
  * - $width: Width of the video player.
  * - $height: Height of the video player.
- * - $file_url: The url of the file to be played.
+ * - $sources: An array of files to be played.
  * - $jw_player_inline_js_code: JSON data with configuration settings for the video player.
  * - $poster: URL to an image to be used for the poster (ie. preview image) for this video.
  *
@@ -16,7 +16,9 @@
 ?>
 <div class="jwplayer-video">
   <video id="<?php print $html_id ?>" width="<?php print $width ?>" height="<?php print $height ?>" controls="controls" preload="none"<?php if(isset($poster)) : ?> poster="<?php print $poster ?>"<?php endif ?>>
-    <source src="<?php print $file_url ?>"<?php if (isset($file_mime)): ?> type="<?php print $file_mime ?>"<?php endif ?> />
+  <?php foreach ($sources as $source) { ?>
+    <source src="<?php print $source['file_path']; ?>"<?php if (isset($source['file_mime'])): ?> type="<?php print $source['file_mime'] ?>"<?php endif ?> />
+  <?php };?>
   </video>
 </div>
 <?php if(isset($jw_player_inline_js_code)): ?>
