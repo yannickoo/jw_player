@@ -8,13 +8,14 @@
       var players = Drupal.settings.jw_player;
       $.each(players, function(player_id, config) {
         if ($('#' + player_id, context).length) {
-          jwplayer(player_id).setup(config);
 
           if (config.events) {
             $.each(config.events, function(event, callback) {
-              jwplayer(player_id)[event](eval(callback));
+              config.events[event] = eval('('+callback+')');
             });
           };
+
+          jwplayer(player_id).setup(config);
         }
       });
     }
