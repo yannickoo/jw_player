@@ -348,13 +348,13 @@ function template_preprocess_jw_player(&$variables) {
   // multiple video formats as well as for adaptive bitrates.
   if (count($variables['sources']) > 1) {
     $variables['config']['levels'] = array();
-    foreach ($variables['sources'] as $source) {
-      $variables['config']['levels'][]['file'] = $source['file_path'];
+    foreach ($variables['sources'] as $key => $source) {
+      $variables['config']['levels'][$key]['file'] = $source['file_path'];
       if (isset($source['bitrate'])) {
-        $variables['config']['levels'][]['bitrate'] = $source['bitrate'];
+        $variables['config']['levels'][$key]['bitrate'] = $source['bitrate'];
       }
       if (isset($source['width'])) {
-        $variables['config']['levels'][]['width'] = $source['width'];
+        $variables['config']['levels'][$key]['width'] = $source['width'];
       }
     }
   }
