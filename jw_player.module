@@ -43,6 +43,7 @@ function jw_player_theme() {
         'file_object' => NULL,
         'sources' => '',
         'preset' => '',
+        'image' => '',
         'options' => array(),
       ),
       'template' => 'theme/jw_player',
@@ -294,6 +295,8 @@ function jw_player_default_settings() {
  *   - $preset (highly recommended!) The machine name of the JW Player preset
  *     you would like to use. Template preprocessing will take care of applying
  *     the preset's settings for you.
+ *   - $image URL for the image ("poster" in HTML 5 video) to use as the video
+ *     preview.
  *   - $options Additional options for the player. These options will override
  *     The module's defaults as well as the presets defaults.
  *
@@ -369,7 +372,7 @@ function template_preprocess_jw_player(&$variables) {
   // Copy player variables into their own array to be set as JavaScript
   // configuration.
   // @todo Bad smell here. Refactoring needed.
-  $player_variables = array('width', 'height', 'controlbar', 'playlist.position', 'playlist.size', 'skin', 'autoplay');
+  $player_variables = array('width', 'height', 'image', 'controlbar', 'playlist.position', 'playlist.size', 'skin', 'autoplay');
   foreach ($player_variables as $key) {
     if (!empty($variables[$key])) {
       $variables['config'][$key] = $variables[$key];
