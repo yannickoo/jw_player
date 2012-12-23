@@ -343,8 +343,9 @@ function template_preprocess_jw_player(&$variables) {
 
   // Give each instance of the player a unique id. A random hash is used in
   // place of drupal_html_id() due to potentially conflicting ids in cases where
-  // the entire output of the theme function is cached.
-  $variables['html_id'] = md5(rand());
+  // the entire output of the theme function is cached. Prefix the id as id's
+  // with a starting numeric character are invalid.
+  $variables['html_id'] = 'jwplayer' . md5(rand());
 
   // Check if there is one or multiple files. If one file then we set 'file', if
   // there are multiple files we set 'levels'. Note that levels is used for both
