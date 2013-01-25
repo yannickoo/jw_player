@@ -44,6 +44,7 @@ function jw_player_theme() {
         'sources' => '',
         'preset' => '',
         'image' => '',
+        'html_id' => NULL,
         'options' => array(),
       ),
       'template' => 'theme/jw_player',
@@ -164,10 +165,17 @@ function jw_player_field_formatter_view($entity_type, $entity, $field, $instance
       $files[$delta] = (object) $item;
     }
     foreach ($files as $delta => $file) {
+      // Give each instance of the player a unique id. The combination
+      // of fid and preset are considered to be save even in cases where
+      // the entire theme functions output is cached.
+      // Prefixing the id makes sure that the id does not start with a
+      // invalid numeric value.
+      $id = $file->fid . $display['settings']['jwplayer_preset'];
       $element[$delta] = array(
         '#theme' => 'jw_player',
         '#file_object' => $file,
         '#preset' => $display['settings']['jwplayer_preset'],
+        '#html_id' => drupal_html_id('jwplayer' . $id),
       );
     }
   }
@@ -341,11 +349,13 @@ function template_preprocess_jw_player(&$variables) {
   // variables passed directly to the theme function take priority over both.
   $variables = array_merge($default_settings, $preset_settings, $options, $variables);
 
-  // Give each instance of the player a unique id. A random hash is used in
-  // place of drupal_html_id() due to potentially conflicting ids in cases where
-  // the entire output of the theme function is cached. Prefix the id as id's
-  // with a starting numeric character are invalid.
-  $variables['html_id'] = 'jwplayer' . md5(rand());
+
+  // The html_id should have been previously set. But we need to make
+  // sure we do have one.
+  if (!isset($variables['html_id'])) {
+    $id = $variables['file_object']->fid . $variables['preset'];
+    $variables['html_id'] = drupal_html_id('jwplayer' . $id);
+  }
 
   // Check if there is one or multiple files. If one file then we set 'file', if
   // there are multiple files we set 'levels'. Note that levels is used for both
@@ -455,6 +465,8 @@ function jw_player_process_jw_player(&$variables) {
       );
     }
   }
+  // Add js file that enables url based seeking.
+  drupal_add_js(drupal_get_path('module', 'jw_player') . '/jw_player_seek.js');
 }
 
 /**

@@ -41,5 +41,20 @@ Once a preset has been defined visit /admin/structure/types and select "manage
 display" for the content type you'd like to configure and select "JW player" as
 the formatter on the relevant file field. At this point you will also need to
 click on the cog beside the field to select the preset you'd like to apply to
-the file. That's it - vidoes uploaded to this field should now be displayed
+the file. That's it - videos uploaded to this field should now be displayed
 using JW Player!
+
+-- URL BASED SEEKING --
+
+You can create permanent links that make jWPlayer start playing at a given
+time frame. The url must look like this:
+
+ /path/to/site?seek=<TIME>#<PLAYER_ID>
+
+<TIME> is the offset in seconds the player should start and <PLAYER_ID>
+is the id of the player the seeking is targeted on. This enables seeking
+for sites with multiple instances of jWPlayer on it.
+
+Not that seeking only works if the server delivering the media file is
+capable of doing so. If the Server does not support this the player will
+always start at the beginning.
