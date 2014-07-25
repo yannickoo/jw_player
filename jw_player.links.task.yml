@@ -1,0 +1,9 @@
+jw_player.settings_tab:
+  route_name: jw_player.admin
+  title: Settings
+  base_route: jw_player.list
+
+jw_player.list_tab:
+  route_name: jw_player.list
+  title: List
+  base_route: jw_player.list

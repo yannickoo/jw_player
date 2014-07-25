@@ -1,0 +1,5 @@
+jw_player.list:
+  title: 'JW Player presets'
+  description: 'Administer JW Player presets.'
+  parent: system.admin_config_media
+  route_name: jw_player.list

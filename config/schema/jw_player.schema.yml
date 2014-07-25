@@ -1,0 +1,41 @@
+jw_player.preset.*:
+  type: mapping
+  label: 'Preset'
+  mapping:
+    id:
+      type: string
+      label: 'Machine-readable name'
+    label:
+      type: label
+      label: 'Label'
+    uuid:
+      type: string
+      label: 'UUID'
+    status:
+      type: boolean
+      label: 'Enabled status of the configuration entity'
+    description:
+      type: label
+      label: 'Description'
+    settings:
+      type: mapping
+      label: 'Settings'
+      mapping:
+        mode:
+          type:  label
+          label: 'Select your primary embed mode.'
+        width:
+          type: integer
+          label: 'Width'
+        height:
+          type: integer
+          label: 'Width'
+        controlbar:
+          type: label
+          label: 'Controlbar Position'
+        skin:
+          type: label
+          label: 'Skin'
+        autoplay:
+          type: boolean
+          label: 'Autoplay'

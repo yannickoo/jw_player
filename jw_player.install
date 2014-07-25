@@ -58,12 +58,9 @@ function jw_player_schema() {
  */
 function jw_player_requirements($phase) {
   $requirements = array();
-
-  // Ensure translations don't break at install time
-  $t = get_t();
-
-  drupal_load('module', 'libraries');
-  $directory = libraries_get_path('jwplayer');
+  if (\Drupal::moduleHandler()->moduleExists('libraries')) {
+   $directory = libraries_get_path('jwplayer');
+  };
 
   // Check the exisence of the JW Player Library
   if ($phase == 'runtime') {
@@ -71,13 +68,13 @@ function jw_player_requirements($phase) {
 
     foreach (array('player.swf', 'jwplayer.js') as $file) {
       if (!file_exists($directory . '/' . $file)) {
-        $errors[] = $t('The file %file is not present in the directory %directory', array('%file' => $file, '%directory' => $directory));
+        $errors[] = t('The file %file is not present in the directory %directory', array('%file' => $file, '%directory' => $directory));
       }
     }
 
     $requirements['jw_player'] = array(
-      'title' => $t('JW Player'),
-      'value' => !empty($errors) ? theme('item_list', array('items' => $errors)) . $t('Please consult INSTALL.txt for installation instructions.') : $t('Installed correctly'),
+      'title' => t('JW Player'),
+      'value' => !empty($errors) ? _theme('item_list', array('items' => $errors)) . t('Please consult INSTALL.txt for installation instructions.') : t('Installed correctly'),
       'severity' => !empty($errors) ? REQUIREMENT_ERROR : REQUIREMENT_OK,
     );
   }
