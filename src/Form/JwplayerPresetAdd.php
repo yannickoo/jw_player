@@ -8,6 +8,7 @@ namespace Drupal\jw_player\Form;
 
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityForm;
+use Drupal\Core\Form\FormStateInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\Core\Entity\Query\QueryFactory;
 /**
@@ -68,7 +69,7 @@ class JwplayerPresetAdd extends EntityForm {
   /**
    * {@inheritdoc}
    */
-  public function form(array $form, array &$form_state) {
+  public function form(array $form, FormStateInterface $form_state) {
 //    $preset = $form_state['item'];
 //    $settings = $preset->settings;
     $form = parent::form($form, $form_state);
@@ -243,7 +244,7 @@ class JwplayerPresetAdd extends EntityForm {
   /**
    * {@inheritdoc}
    */
-  public function save(array $form, array &$form_state) {
+  public function save(array $form, FormStateInterface $form_state) {
     $preset = $this->entity;
     $status = $preset->save();
     if ($status) {
@@ -256,7 +257,7 @@ class JwplayerPresetAdd extends EntityForm {
         '%label' => $preset->label(),
       )));
     }
-    $form_state['redirect'] = 'admin/config/media/jw_player';
+    $form_state->setRedirect('jw_player.list');
   }
 
 }

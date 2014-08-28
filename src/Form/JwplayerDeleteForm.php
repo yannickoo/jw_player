@@ -5,6 +5,7 @@
  */
 namespace Drupal\jw_player\Form;
 use Drupal\Core\Entity\EntityConfirmFormBase;
+use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
 /**
  * Builds the form to delete a Example.
@@ -19,7 +20,7 @@ class JwplayerDeleteForm extends EntityConfirmFormBase {
   /**
    * {@inheritdoc}
    */
-  public function getCancelRoute() {
+  public function getCancelUrl() {
     return new Url('jw_player.list');
   }
   /**
@@ -31,9 +32,9 @@ class JwplayerDeleteForm extends EntityConfirmFormBase {
   /**
    * {@inheritdoc}
    */
-  public function submit(array $form, array &$form_state) {
+  public function submit(array $form, FormStateInterface $form_state) {
     $this->entity->delete();
     drupal_set_message($this->t('Category %label has been deleted.', array('%label' => $this->entity->label())));
-    $form_state['redirect_route'] = $this->getCancelRoute();
+    $form_state->setRedirectUrl($this->getCancelUrl());
   }
 }

@@ -8,6 +8,7 @@ namespace Drupal\jw_player\Form;
 
 use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Config\ConfigFactory;
+use Drupal\Core\Form\FormStateInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -39,7 +40,7 @@ class JwplayerSettingsForm extends ConfigFormBase {
   /**
    * {@inheritdoc}
    */
-  public function buildForm(array $form, array &$form_state) {
+  public function buildForm(array $form, FormStateInterface $form_state) {
     $page = \Drupal::service('element_info')->getInfo('page');
     $page['#title'] = $this->t('JW Player general settings');
 
@@ -55,10 +56,10 @@ class JwplayerSettingsForm extends ConfigFormBase {
   /**
    * {@inheritdoc}
    */
-  public function submitForm(array &$form, array &$form_state) {
+  public function submitForm(array &$form, FormStateInterface $form_state) {
     $config = \Drupal::config('jw_player.settings');
     parent::submitForm($form, $form_state);
-    $config->set('jw_player_inline_js', $form_state['values']['jw_player_inline_js']);
+    $config->set('jw_player_inline_js', $form_state->getValue('jw_player_inline_js'));
     $config->save();
   }
 }
