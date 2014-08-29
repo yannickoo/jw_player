@@ -3,9 +3,18 @@
  * @file
  * Adds a theme function which allows theme developers to use the JW Player.
  */
-use Drupal\jw_player\Entity\Jw_player;
-use Symfony\Component\HttpFoundation\JsonResponse;
 
+/**
+ * Implements hook_permission().
+ */
+function jw_player_permission() {
+  return array(
+    'administer JW Player presets' => array(
+      'title' => t('administer JW Player presets'),
+      'description' => t('Perform administration of JW Player presets'),
+    ),
+  );
+}
 
 /**
  * Implements hook_theme().
@@ -56,8 +65,9 @@ function jw_player_default_settings() {
  * needed.
  */
 function jw_player_page_build(&$page) {
+  $config = \Drupal::config('jw_player.settings');
 
-  if (\Drupal::config('jw_player.settings')->get('jw_player_inline_js')) {
+  if ($config->get('jw_player_inline_js')) {
     $path = libraries_get_path('jwplayer');
     $page['#attached']['js'][$path . '/jwplayer.js'] = array('every_page' => TRUE);
 
@@ -65,8 +75,16 @@ function jw_player_page_build(&$page) {
   else {
     $page['#attached']['js'][libraries_get_path('jwplayer') . '/jwplayer.js'] = array('every_page' => TRUE);
     $page['#attached']['js'][] = array('data' => drupal_get_path('module', 'jw_player') . '/jw_player.js', 'type' => 'file');
-    if (\Drupal::config('jw_player.settings')->get('jw_player_setting_js')) {
-      $setting = \Drupal::config('jw_player.settings')->get('jw_player_setting_js');
+    if ($license_key = $config->get('jw_player_key')) {
+      $page['#attached']['js'][] = array(
+        'data' => 'jwplayer.key=' . json_encode($license_key),
+        'type' => 'inline',
+        'scope' => 'header',
+        'weight' => 5,
+      );
+    }
+    if ($config->get('jw_player_setting_js')) {
+      $setting = $config->get('jw_player_setting_js');
       $page['#attached']['js'][] = $setting;
     }
   }
@@ -90,6 +108,24 @@ function jw_player_preset_plugins($name = NULL) {
 
   return $plugins;
 }
-function jw_player_preset_load(array $id = NULL) {
-  return Jw_player::loadMultiple($id);
+
+/**
+ * Retrieves all available skins.
+ */
+function jw_player_skins($name = NULL) {
+  $skins = &drupal_static(__FUNCTION__);
+
+  if (!isset($skins)) {
+    $directory = libraries_get_path('jwplayer_skins');
+    $skins = file_scan_directory($directory, '/\.xml|\.swf$/');
+  }
+
+  if ($name) {
+    foreach ($skins as $file) {
+      if ($file->name == $name) {
+        return $file;
+      }
+    }
+  }
+  return $skins;
 }

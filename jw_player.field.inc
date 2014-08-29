@@ -5,6 +5,7 @@
  * Implement an jw_player field, based on the file module's file field.
  */
 
+use Drupal\jw_player\Entity\Jw_player;
 use Symfony\Component\HttpFoundation\JsonResponse;
 
 /**
@@ -23,12 +24,12 @@ function template_preprocess_jw_player(&$variables) {
   // Load preset if set.
   $preset_settings = array();
   if (!empty($variables['preset'])) {
-    $preset = jw_player_preset_load((array)$variables['preset']);
+    $preset = Jw_player::load($variables['preset']);
     // Additional check to ensure that the preset has actually loaded. This
     // prevents problems where a preset has been deleted but a field is still
     // configured to use it.
     if (!empty($preset)) {
-      $preset_settings = $preset[$variables['preset']]->settings;
+      $preset_settings = $preset->settings;
     }
   }
 
@@ -88,6 +89,9 @@ function template_preprocess_jw_player(&$variables) {
     }
   }
 
+  $variables['config']['base'] = file_create_url(libraries_get_path('jwplayer') . '/');
+
+
   // Copy over all enabled plugins into the 'config' section as this is the key
   // that is sent over to the player.
   if (!empty($variables['plugins'])) {
@@ -102,6 +106,8 @@ function template_preprocess_jw_player(&$variables) {
     $jw_player_inline_js_code = new JsonResponse($variables['config']);
     $variables['jw_player_inline_js_code'] = stripslashes($jw_player_inline_js_code->getContent());
   }
+
+
   // If inline is not selected, add all relevant JavaScript now.
   else {
     $setting = array(

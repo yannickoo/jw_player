@@ -49,23 +49,7 @@ class JwplayerPresetAdd extends EntityForm {
     );
   }
 
-  public function jw_player_skins($name = NULL) {
-    $skins = &drupal_static(__FUNCTION__);
 
-    if (!isset($skins)) {
-      $directory = libraries_get_path('jwplayer_skins');
-      $skins = file_scan_directory($directory, '/\.xml|\.swf$/');
-    }
-
-    if ($name) {
-      foreach ($skins as $file) {
-        if ($file->name == $name) {
-          return $file;
-        }
-      }
-    }
-    return $skins;
-  }
   /**
    * {@inheritdoc}
    */
@@ -167,7 +151,7 @@ class JwplayerPresetAdd extends EntityForm {
 
     // Skins.
     $skin_options = array();
-    foreach ($this::jw_player_skins() as $skin) {
+    foreach (jw_player_skins() as $skin) {
       $skin_options[$skin->name] = drupal_ucfirst($skin->name);
     }
 

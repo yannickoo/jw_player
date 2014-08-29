@@ -10,6 +10,7 @@ namespace Drupal\jw_player\Plugin\Field\FieldFormatter;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Field\FormatterBase;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\jw_player\Entity\Jw_player;
 
 /**
  * Plugin implementation of the 'foo_formatter' formatter
@@ -40,7 +41,7 @@ class JwplayerFormatter extends FormatterBase {
   public function settingsForm(array $form, FormStateInterface $form_state) {
     $settings = $this->settings;
 
-    $format_types = jw_player_preset_load();
+    $format_types = Jw_player::loadMultiple();
     foreach ($format_types as $type => $type_info) {
       $options[$type] = $type_info->label();
     }
@@ -74,7 +75,7 @@ class JwplayerFormatter extends FormatterBase {
     $settings = $this->settings;
 
     $summary = array();
-    $presets = jw_player_preset_load();
+    $presets = Jw_player::loadMultiple();
 
     if (isset($presets[$settings['jwplayer_preset']])) {
       $summary[] = t('Preset: @name', array('@name' => $this->getSetting('jwplayer_preset')));

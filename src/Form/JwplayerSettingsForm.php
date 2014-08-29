@@ -41,14 +41,19 @@ class JwplayerSettingsForm extends ConfigFormBase {
    * {@inheritdoc}
    */
   public function buildForm(array $form, FormStateInterface $form_state) {
-    $page = \Drupal::service('element_info')->getInfo('page');
-    $page['#title'] = $this->t('JW Player general settings');
-
+    $config = $this->config('jw_player.settings');
     $form['jw_player_inline_js'] = array(
       '#type' => 'checkbox',
       '#title' => t('Use inline javascript'),
       '#description' => t('With this option enabled JW Player configuration will be printed inline directly after the player markup. This can be useful if the player markup is cached as otherwise JW Player will not be loaded. The downside is that the player itself will be loaded on all pages.'),
-      '#default_value' => (bool) \Drupal::config('jw_player.settings')->get('jw_player_inline_js'),
+      '#default_value' => $config->get('jw_player_inline_js'),
+    );
+
+    $form['jw_player_key'] = array(
+      '#type' => 'textfield',
+      '#title' => t('Licence key'),
+      '#description' => t('If you have a premium account enter your key here'),
+      '#default_value' => $config->get('jw_player_key'),
     );
 
     return parent::buildForm($form, $form_state);
@@ -57,9 +62,10 @@ class JwplayerSettingsForm extends ConfigFormBase {
    * {@inheritdoc}
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
-    $config = \Drupal::config('jw_player.settings');
     parent::submitForm($form, $form_state);
+    $config = $this->config('jw_player.settings');
     $config->set('jw_player_inline_js', $form_state->getValue('jw_player_inline_js'));
+    $config->set('jw_player_key', $form_state->getValue('jw_player_key'));
     $config->save();
   }
 }

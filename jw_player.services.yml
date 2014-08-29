@@ -1,5 +1,0 @@
-services:
-  access_check.jw_player:
-    class: Drupal\jw_player\Access\JwplayerSettingAccess
-    tags:
-      - { name: access_check, applies_to: _jw_player_setting_access }

@@ -2,8 +2,9 @@ jw_player.admin:
   path: 'admin/config/media/jw_player/settings'
   defaults:
     _form: '\Drupal\jw_player\Form\JwplayerSettingsForm'
+    _title: 'JW Player general settings'
   requirements:
-    _jw_player_setting_access: 'TRUE'
+    _permission: 'administer JW Player presets'
 
 jw_player.list:
   path: '/admin/config/media/jw_player'

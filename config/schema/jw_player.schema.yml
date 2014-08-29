@@ -1,5 +1,5 @@
 jw_player.preset.*:
-  type: mapping
+  type: config_entity
   label: 'Preset'
   mapping:
     id:
@@ -8,9 +8,6 @@ jw_player.preset.*:
     label:
       type: label
       label: 'Label'
-    uuid:
-      type: string
-      label: 'UUID'
     status:
       type: boolean
       label: 'Enabled status of the configuration entity'
