@@ -45,49 +45,15 @@ function jw_player_default_settings() {
 
   if (!isset($defaults)) {
     $defaults = array(
-      'flashplayer' => file_create_url(libraries_get_path('jwplayer') . '/player.swf'),
       'width' => '640',
       'height' => '480',
+      'mode' => 'html5',
       'autoplay' => FALSE,
       'controlbar' => 'bottom',
+      'base' => file_create_url(libraries_get_path('jwplayer') . '/'),
     );
   }
   return $defaults;
-}
-
-
-
-/**
- * Implements hook_page_build().
- *
- * If the player configuration is set to print inline, load the JW Player
- * JavaScript on all pages. Due to caching one never knows when it will be
- * needed.
- */
-function jw_player_page_build(&$page) {
-  $config = \Drupal::config('jw_player.settings');
-
-  if ($config->get('jw_player_inline_js')) {
-    $path = libraries_get_path('jwplayer');
-    $page['#attached']['js'][$path . '/jwplayer.js'] = array('every_page' => TRUE);
-
-  }
-  else {
-    $page['#attached']['js'][libraries_get_path('jwplayer') . '/jwplayer.js'] = array('every_page' => TRUE);
-    $page['#attached']['js'][] = array('data' => drupal_get_path('module', 'jw_player') . '/jw_player.js', 'type' => 'file');
-    if ($license_key = $config->get('jw_player_key')) {
-      $page['#attached']['js'][] = array(
-        'data' => 'jwplayer.key=' . json_encode($license_key),
-        'type' => 'inline',
-        'scope' => 'header',
-        'weight' => 5,
-      );
-    }
-    if ($config->get('jw_player_setting_js')) {
-      $setting = $config->get('jw_player_setting_js');
-      $page['#attached']['js'][] = $setting;
-    }
-  }
 }
 
 /**
@@ -128,4 +94,89 @@ function jw_player_skins($name = NULL) {
     }
   }
   return $skins;
+}
+
+/**
+ * Implements hook_libraries_info().
+ */
+function jw_player_libraries_info() {
+  $libraries = array(
+    'jwplayer' => array(
+      'name' => 'JW Player',
+      'vendor url' => 'http://www.jwplayer.com/',
+      'download url' => 'http://www.jwplayer.com/download',
+      'version arguments' => array(
+        'file' => 'jwplayer.js',
+        'pattern' => '/jwplayer.version="(.*?)"/',
+        'lines' => 1,
+      ),
+      'files' => array(
+        'js' => array(
+          'jwplayer.js' => array(),
+        ),
+      ),
+    ),
+  );
+  return $libraries;
+}
+
+/**
+ * Implements hook_library_info_alter().
+ */
+function jw_player_library_info_alter(&$libraries, $extension) {
+  if ($extension != 'jw_player') {
+    return;
+  }
+  $info = libraries_detect('jwplayer');
+  $libraries['jwplayer'] += array(
+    'website' => $info['vendor url'],
+    'version' => $info['installed'] ? $info['version'] : 'cloud-hosted',
+  );
+
+  $config = \Drupal::config('jw_player.settings');
+  if ($info['installed']) {
+    // Self hosted player, use files from library definition.
+    if (!empty($info['files']['js'])) {
+      foreach ($info['files']['js'] as $data => $option) {
+
+        if (is_numeric($data)) {
+          $option = "/{$info['library path']}/{$option}";
+        }
+        elseif (empty($option['type']) || $option['type'] == 'file') {
+          $data = "/{$info['library path']}/{$data}";
+        }
+
+        $libraries['jwplayer']['js'][$data] = $option;
+      }
+    }
+  }
+  elseif ($account_token = $config->get('account_token')) {
+    // Cloud hosted player, use external JavaScript.
+    $libraries['jwplayer']['js']["//jwpsrv.com/library/{$account_token}.js"] = array(
+      'type' => 'external',
+    );
+  }
+  if ($key = $config->get('license_key')) {
+    $libraries['jwplayer']['js']['jwplayer.key=' . json_encode($key)] = array(
+      'type' => 'inline',
+      'scope' => 'header',
+      'weight' => 5,
+    );
+  }
+  // Use integration files from library definition.
+  foreach ($info['integration files'] as $module => $files) {
+    foreach (array_keys($files) as $type) {
+      $module_path = drupal_get_path('module', $module);
+      foreach ($files[$type] as $data => $option) {
+        if (is_numeric($data)) {
+          $option = "{$module_path}/{$option}";
+        }
+        elseif (empty($option['type']) || $option['type'] == 'file') {
+          $data = "{$module_path}/{$data}";
+        }
+        $libraries['jwplayer'][$type][$data] = $option;
+      }
+    }
+  }
+  return $libraries;
 }

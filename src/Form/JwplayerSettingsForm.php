@@ -42,18 +42,23 @@ class JwplayerSettingsForm extends ConfigFormBase {
    */
   public function buildForm(array $form, FormStateInterface $form_state) {
     $config = $this->config('jw_player.settings');
-    $form['jw_player_inline_js'] = array(
-      '#type' => 'checkbox',
-      '#title' => t('Use inline javascript'),
-      '#description' => t('With this option enabled JW Player configuration will be printed inline directly after the player markup. This can be useful if the player markup is cached as otherwise JW Player will not be loaded. The downside is that the player itself will be loaded on all pages.'),
-      '#default_value' => $config->get('jw_player_inline_js'),
+    $url = 'https://account.jwplayer.com/#/account';
+    $form['account_token'] = array(
+      '#type' => 'textfield',
+      '#title' => $this->t('Cloud-Hosted Account Token'),
+      '#description' => $this->t('Set the account token for a Cloud-Hosted Player, or leave empty if using a Self-Hosted Player. You can retrieve your token from <a href="@url">your account settings page at jwplayer.com</a>.', array(
+          '@url' => $url,
+        )),
+      '#default_value' => $config->get('account_token', NULL),
     );
 
-    $form['jw_player_key'] = array(
+    $form['license_key'] = array(
       '#type' => 'textfield',
-      '#title' => t('Licence key'),
-      '#description' => t('If you have a premium account enter your key here'),
-      '#default_value' => $config->get('jw_player_key'),
+      '#title' => $this->t('Self-Hosted Player License Key'),
+      '#description' => $this->t('If you have a premium account enter your key here. You can retrieve your license key from <a href="@url">your account settings page at jwplayer.com</a>.', array(
+          '@url' => $url,
+        )),
+      '#default_value' => $config->get('license_key', NULL),
     );
 
     return parent::buildForm($form, $form_state);
@@ -64,8 +69,8 @@ class JwplayerSettingsForm extends ConfigFormBase {
   public function submitForm(array &$form, FormStateInterface $form_state) {
     parent::submitForm($form, $form_state);
     $config = $this->config('jw_player.settings');
-    $config->set('jw_player_inline_js', $form_state->getValue('jw_player_inline_js'));
-    $config->set('jw_player_key', $form_state->getValue('jw_player_key'));
+    $config->set('account_token', $form_state->getValue('account_token'));
+    $config->set('license_key', $form_state->getValue('license_key'));
     $config->save();
   }
 }

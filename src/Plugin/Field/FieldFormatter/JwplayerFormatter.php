@@ -31,7 +31,7 @@ class JwplayerFormatter extends FormatterBase {
    */
   public static function defaultSettings() {
     return array(
-      'jwplayer_preset' => 'none',
+      'jwplayer_preset' => NULL,
     ) + parent::defaultSettings();
   }
 
@@ -39,16 +39,15 @@ class JwplayerFormatter extends FormatterBase {
    * {@inheritdoc}
    */
   public function settingsForm(array $form, FormStateInterface $form_state) {
-    $settings = $this->settings;
-
-    $format_types = Jw_player::loadMultiple();
-    foreach ($format_types as $type => $type_info) {
+    $presets = Jw_player::loadMultiple();
+    $options = array();
+    foreach ($presets as $type => $type_info) {
       $options[$type] = $type_info->label();
     }
-     $element['jwplayer_preset'] = array(
+    $element['jwplayer_preset'] = array(
       '#title' => t('Select preset'),
       '#type' => 'select',
-      '#default_value' => ($settings['jwplayer_preset']) ?  $settings['jwplayer_preset'] : FALSE,
+      '#default_value' => $this->getSetting('jwplayer_preset'),
       '#options' => $options,
     );
     $element['links'] = array(
@@ -96,30 +95,37 @@ class JwplayerFormatter extends FormatterBase {
 
     return $summary;
   }
+
   /**
    * {@inheritdoc}
    */
   public function viewElements(FieldItemListInterface $items) {
-     $element = array();
-     if ($this->getPluginId() == 'jwplayer_formatter' /*&& !empty($item->summary)*/) {
-       // Process files for the theme function.
-       foreach ($items as $delta => $item) {
-         if ($item->entity) {
-             $file_uri = $item->entity->getFileUri();
-             $file_mime = $item->entity->getMimeType();
-             $uri = file_create_url($file_uri);
-           $element[$delta] = array(
-             '#theme' => 'jw_player',
-             '#file_url' =>  $uri,
-             '#preset' => $this->settings['jwplayer_preset'],
-             '#file_mime' => $file_mime,
-
-           );
-         }
-       }
-     }
-     return $element;
+    $element = array();
+    // Process files for the theme function.
+    foreach ($items as $delta => $item) {
+      if ($item->entity) {
+        $file_uri = $item->entity->getFileUri();
+        $file_mime = $item->entity->getMimeType();
+        $uri = file_create_url($file_uri);
+        $element[$delta] = array(
+          'player' => array(
+            '#theme' => 'jw_player',
+            '#file_url' => $uri,
+            '#preset' => $this->getSetting('jwplayer_preset'),
+            '#file_mime' => $file_mime,
+            // Give each instance of the player a unique id. A random hash is
+            // used in place of drupal_html_id() due to potentially conflicting
+            // ids in cases where the entire output of the theme function is
+            // cached.
+            '#html_id' => md5(rand()),
+          ),
+          '#attached' => array(
+            'library' => array('jw_player/jwplayer'),
+          ),
+        );
+      }
     }
-
+    return $element;
+  }
 
 }
