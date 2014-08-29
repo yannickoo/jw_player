@@ -26,6 +26,8 @@ function jw_player_theme() {
         'preset' => '',
         'file_url' => '',
         'file_mime' => '',
+        'file' => NULL,
+        'item' => NULL,
         'options' => array(),
         'html_id' => '',
       ),

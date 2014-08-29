@@ -6,7 +6,6 @@
  */
 
 use Drupal\jw_player\Entity\Jw_player;
-use Symfony\Component\HttpFoundation\JsonResponse;
 
 /**
  * Prepares variables for jw_player formatter templates.

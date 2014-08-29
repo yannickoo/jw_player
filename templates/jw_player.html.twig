@@ -1,14 +1,10 @@
 <div class="jwplayer-video">
-    <video id="{{   html_id }}" width="{{  width }} " height="{{ height }} " controls="controls" preload="none"{% if poster == null %} poster="{{ poster  }}"{%  endif %}>
-    <source src="{{ file_url }}"
-            {% if file_mime  %}
-              type="{{ file_mime }}"
-            {% endif %}/>
+    <video id="{{ html_id }}" width="{{ width }}" height="{{ height }}" controls="controls" preload="none"{% if poster %} poster="{{ poster }}"{%  endif %}>
+        <source src="{{ file_url }}"{% if file_mime %} type="{{ file_mime }}" {% endif %}/>
     </video>
 </div>
 {% if  jw_player_inline_js_code  %}
-<script type="text/javascript">
-    jwplayer('{{ html_id }}').setup( {% autoescape false %}{{ jw_player_inline_js_code }}{% endautoescape %});
-</script>
+    <script type="text/javascript">
+        jwplayer('{{ html_id }}').setup( {% autoescape false %}{{ jw_player_inline_js_code }}{% endautoescape %});
+    </script>
 {% endif %}
-{{ dump() }}

@@ -111,13 +111,16 @@ class JwplayerFormatter extends FormatterBase {
           'player' => array(
             '#theme' => 'jw_player',
             '#file_url' => $uri,
+            '#file' => $item->entity,
+            '#item' => $item,
             '#preset' => $this->getSetting('jwplayer_preset'),
             '#file_mime' => $file_mime,
             // Give each instance of the player a unique id. A random hash is
             // used in place of drupal_html_id() due to potentially conflicting
             // ids in cases where the entire output of the theme function is
-            // cached.
-            '#html_id' => md5(rand()),
+            // cached. Prefix with jwplayer, as ID's that start with a number
+            // are not valid.
+            '#html_id' => 'jwplayer-' . md5(rand()),
           ),
           '#attached' => array(
             'library' => array('jw_player/jwplayer'),
