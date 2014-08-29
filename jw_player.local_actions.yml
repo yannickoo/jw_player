@@ -1,5 +1,0 @@
-jw_player.preset_add:
-  route_name: jw_player.preset_add
-  title: 'Add preset'
-  appears_on:
-    - 'jw_player.list'

@@ -55,7 +55,7 @@ function template_preprocess_jw_player(&$variables) {
   // Copy player variables into their own array to be set as JavaScript
   // configuration.
   // @todo Bad smell here. Refactoring needed.
-  $player_variables = array('width', 'height', 'controlbar', 'playlist.position', 'playlist.size', 'skin', 'autoplay');
+  $player_variables = array('width', 'height', 'controlbar', 'playlist.position', 'playlist.size', 'skin', 'autoplay', 'base');
   foreach ($player_variables as $key) {
     if (!empty($variables[$key])) {
       $variables['config'][$key] = $variables[$key];
