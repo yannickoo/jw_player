@@ -6,6 +6,7 @@
 
 namespace Drupal\jw_player\Form;
 
+use Drupal\Component\Utility\String;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityForm;
 use Drupal\Core\Form\FormStateInterface;
@@ -57,7 +58,7 @@ class JwplayerPresetAdd extends EntityForm {
 //    $preset = $form_state['item'];
 //    $settings = $preset->settings;
     $form = parent::form($form, $form_state);
-    $settings = $this->entity;
+    $preset = $this->entity;
     // This is a hack. CTools adds a hierarchy for export_key in form of
     // $form['info][$export_key] (see line 1007 of
     // ctools/plugins/export_ui/ctools_export_ui.class.php).
@@ -70,7 +71,7 @@ class JwplayerPresetAdd extends EntityForm {
       '#maxlength' => 255,
       '#title' => $this->t('Preset name'),
       '#description' => $this->t('Enter name for the preset.'),
-      '#default_value' =>  $settings->label(),
+      '#default_value' =>  $preset->label(),
       '#required' => TRUE,
       '#weight' => 0,
     );
@@ -78,7 +79,7 @@ class JwplayerPresetAdd extends EntityForm {
     $form['id'] = array(
       '#title' => t('Machine name'),
       '#type' => 'machine_name',
-      '#default_value' => $settings->id(),
+      '#default_value' => $preset->id(),
       '#machine_name' => array(
         'exists' =>  array($this, 'exists'),
       ),
@@ -91,7 +92,7 @@ class JwplayerPresetAdd extends EntityForm {
       '#size' => 10,
       '#title' => t('Description'),
       '#description' => t('Summary for the preset.'),
-      '#default_value' => $settings->description,
+      '#default_value' => $preset->description,
       '#weight' => 2,
     );
 
@@ -110,7 +111,7 @@ class JwplayerPresetAdd extends EntityForm {
         'flash' => t('Flash primary, HTML5 failover'),
         'html5' => t('HTML5 primary, Flash failover'),
       ),
-     '#default_value' => isset($settings->settings['mode']) ? $settings->settings['mode'] : 'html5',
+      '#default_value' => isset($preset->settings['mode']) ? $preset->settings['mode'] : 'html5',
     );
 
     $form['settings']['width'] = array(
@@ -119,7 +120,7 @@ class JwplayerPresetAdd extends EntityForm {
       '#title' => t('Width'),
       '#description' => t('Enter the width for this player.'),
       '#field_suffix' => ' ' . t('pixels'),
-      '#default_value' => $settings->settings['width'],
+      '#default_value' => isset($preset->settings['width']) ? $preset->settings['width'] : NULL,
       '#required' => TRUE,
       '#weight' => 5,
     );
@@ -130,7 +131,7 @@ class JwplayerPresetAdd extends EntityForm {
       '#title' => t('Height'),
       '#description' => t('Enter the height for this player.'),
       '#field_suffix' => ' ' . t('pixels'),
-      '#default_value' => $settings->settings['height'],
+      '#default_value' => isset($preset->settings['height']) ? $preset->settings['height'] : NULL,
       '#required' => TRUE,
       '#weight' => 6,
     );
@@ -139,12 +140,12 @@ class JwplayerPresetAdd extends EntityForm {
       '#title' => t('Controlbar Position'),
       '#type' => 'select',
       '#description' => t('Where the controlbar should be positioned.'),
-      '#default_value' => !empty($settings->settings['controlbar']) ? $settings->settings['controlbar']: 'none',
+      '#default_value' => !empty($preset->settings['controlbar']) ? $preset->settings['controlbar'] : 'none',
       '#options' => array(
         'none' => t('None'),
         'bottom' => t('Bottom'),
         'top' => t('Top'),
-        'over' => t('Over')
+        'over' => t('Over'),
       ),
       '#weight' => 7,
     );
@@ -158,7 +159,7 @@ class JwplayerPresetAdd extends EntityForm {
     $form['settings']['skin'] = array(
       '#title' => t('Skin'),
       '#type' => 'select',
-      '#default_value' => !empty($settings->settings['skin']) ? $settings->settings['skin']: FALSE,
+      '#default_value' => !empty($preset->settings['skin']) ? $preset->settings['skin'] : FALSE,
       '#empty_option' => t('None (default skin)'),
       '#options' => $skin_options,
     );
@@ -170,8 +171,8 @@ class JwplayerPresetAdd extends EntityForm {
       // Fieldset per plugin.
       $form['settings']['plugins'][$plugin] = array(
         '#type' => 'fieldset',
-        '#title' => \Drupal\Component\Utility\String::checkPlain($info['name']),
-        '#description' => \Drupal\Component\Utility\String::checkPlain($info['description']),
+        '#title' => String::checkPlain($info['name']),
+        '#description' => String::checkPlain($info['description']),
         '#tree' => TRUE,
         '#weight' => 10,
         '#collapsible' => TRUE,
@@ -182,7 +183,7 @@ class JwplayerPresetAdd extends EntityForm {
       $form['settings']['plugins'][$plugin]['enable'] = array(
         '#type' => 'checkbox',
         '#title' => t('Enable'),
-        '#description' => \Drupal\Component\Utility\String::checkPlain($info['description']),
+        '#description' => String::checkPlain($info['description']),
 //        '#default_value' => isset($settings['plugins'][$plugin]['enable']) ? $settings['plugins'][$plugin]['enable'] : FALSE,
       );
 
@@ -197,7 +198,7 @@ class JwplayerPresetAdd extends EntityForm {
             $element['#title'] = drupal_ucfirst($option);
           }
           // Alter the default value if a setting has been saved previously.
-          $element['#default_value'] = !empty($settings['plugins'][$plugin][$option]) ? $settings['plugins'][$plugin][$option] : $element['#default_value'];
+          $element['#default_value'] = !empty($preset['plugins'][$plugin][$option]) ? $preset['plugins'][$plugin][$option] : $element['#default_value'];
           // Make the whole element visible only if the plugin is checked (enabled).
           $element['#states'] = array(
             'visible' => array(
@@ -214,7 +215,7 @@ class JwplayerPresetAdd extends EntityForm {
       '#title' => t('Autoplay'),
       '#type' => 'checkbox',
       '#description' => t('Set the video to autoplay on page load'),
-      '#default_value' => !empty($settings->settings['autoplay']) ? $settings->settings['autoplay']: 'false',
+      '#default_value' => !empty($preset->settings['autoplay']) ? $preset->settings['autoplay']: 'false',
       '#weight' => 4,
     );
 

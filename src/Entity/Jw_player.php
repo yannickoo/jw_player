@@ -33,26 +33,29 @@ use Drupal\jw_player\Jw_playerInterface;
  *   }
  * )
  */
-
 class Jw_player extends ConfigEntityBase implements Jw_playerInterface {
+
   /**
-   * The Example ID.
+   * The ID.
    *
    * @var string
    */
   public $id;
+
   /**
-   * The Example UUID.
-   *
-   * @var string
-   */
-  public $uuid;
-  /**
-   * The Example label.
+   * The Label.
    *
    * @var string
    */
   public $label;
-  // Your specific configuration property get/set methods go here,
-  // implementing the interface.
+
+  /**
+   * Description.
+   *
+   * @var string
+   */
+  public $description;
+
+  public $settings = array();
+
 }
