@@ -7,12 +7,12 @@ namespace Drupal\jw_player\Entity;
 use Drupal\Core\Config\Entity\ConfigEntityBase;
 use Drupal\jw_player\Jw_playerInterface;
 /**
- * Defines the Example entity.
+ * Defines the JW Player preset entity.
  *
  * @ConfigEntityType(
  *   id = "jw_player",
- *   label = @Translation("Jw player"),
- *   controllers = {
+ *   label = @Translation("JWP Player preset"),
+ *   handlers = {
  *     "list_builder" = "Drupal\jw_player\Controller\Jw_playerListBuilder",
  *     "form" = {
  *       "add" = "Drupal\jw_player\Form\JwplayerPresetAdd",
