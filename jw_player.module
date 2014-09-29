@@ -5,18 +5,6 @@
  */
 
 /**
- * Implements hook_permission().
- */
-function jw_player_permission() {
-  return array(
-    'administer JW Player presets' => array(
-      'title' => t('administer JW Player presets'),
-      'description' => t('Perform administration of JW Player presets'),
-    ),
-  );
-}
-
-/**
  * Implements hook_theme().
  */
 function jw_player_theme() {
