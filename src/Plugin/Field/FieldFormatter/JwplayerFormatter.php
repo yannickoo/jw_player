@@ -125,6 +125,9 @@ class JwplayerFormatter extends FormatterBase {
           '#attached' => array(
             'library' => array('jw_player/jwplayer'),
           ),
+          '#cache' => array(
+            'tags' => $item->entity->getCacheTag(),
+          ),
         );
       }
     }
