@@ -7,6 +7,7 @@
 namespace Drupal\jw_player\Form;
 
 use Drupal\Component\Utility\String;
+use Drupal\Component\Utility\Unicode;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityForm;
 use Drupal\Core\Form\FormStateInterface;
@@ -153,7 +154,7 @@ class JwplayerPresetAdd extends EntityForm {
     // Skins.
     $skin_options = array();
     foreach (jw_player_skins() as $skin) {
-      $skin_options[$skin->name] = drupal_ucfirst($skin->name);
+      $skin_options[$skin->name] = Unicode::ucfirst($skin->name);
     }
 
     $form['settings']['skin'] = array(
