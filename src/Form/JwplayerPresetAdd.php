@@ -220,6 +220,36 @@ class JwplayerPresetAdd extends EntityForm {
       '#weight' => 4,
     );
 
+    $form['settings']['advertising'] = array(
+      '#type' => 'details',
+      '#title' => $this->t('Advertising'),
+      '#description' => $this->t('This requires an enterprise license. See the <a href="@jwplayer_documentation_url">JW Player documentation</a> about preroll ads for more information'),
+      '#weight' => 5,
+    );
+
+    $form['settings']['advertising']['client'] = array(
+      '#type' => 'select',
+      '#title' => $this->t('Client'),
+      '#options' => array(
+        'vast' => $this->t('VAST/VPAID'),
+        'googima' => 'Google IMA Preroll'
+      ),
+      '#empty_option' => $this->t('No advertising'),
+      '#default_value' => !empty($preset->settings['advertising']['client']) ? $preset->settings['advertising']['client']: NULL,
+    );
+
+    $form['settings']['advertising']['tag'] = array(
+      '#type' => 'textfield',
+      '#title' => $this->t('Tag'),
+      '#description' => $this->t('Set this to the URL of the ad tag that contains the pre-roll ad.'),
+      '#default_value' => !empty($preset->settings['advertising']['tag']) ? $preset->settings['advertising']['tag']: NULL,
+      '#states' => array(
+        'invisible' => array(
+          ':input[name="settings[advertising][client]"]' => array('value' => ''),
+        )
+      )
+    );
+
     return $form;
   }
   public function exists($machine_name) {

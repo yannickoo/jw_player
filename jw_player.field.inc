@@ -54,7 +54,7 @@ function template_preprocess_jw_player(&$variables) {
   // Copy player variables into their own array to be set as JavaScript
   // configuration.
   // @todo Bad smell here. Refactoring needed.
-  $player_variables = array('width', 'height', 'controlbar', 'playlist.position', 'playlist.size', 'skin', 'autoplay', 'base');
+  $player_variables = array('width', 'height', 'controlbar', 'playlist.position', 'playlist.size', 'skin', 'autoplay', 'base', 'advertising');
   foreach ($player_variables as $key) {
     if (!empty($variables[$key])) {
       $variables['config'][$key] = $variables[$key];
@@ -62,6 +62,11 @@ function template_preprocess_jw_player(&$variables) {
   }
 
   $variables['config']['primary'] = $variables['mode'];
+
+  // Unset advertising if is not set.
+  if (empty($variables['config']['advertising']['client'])) {
+    unset($variables['config']['advertising']);
+  }
 
   // Copy over all enabled plugins into the 'config' section as this is the key
   // that is sent over to the player.

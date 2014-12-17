@@ -41,6 +41,10 @@ function jw_player_default_settings() {
       'autoplay' => FALSE,
       'controlbar' => 'bottom',
       'base' => file_create_url(libraries_get_path('jwplayer') . '/'),
+      'advertising' => array(
+        'client' => '',
+        'tag' => '',
+      )
     );
   }
   return $defaults;
