@@ -7,6 +7,7 @@
 
 namespace Drupal\jw_player\Plugin\Field\FieldFormatter;
 
+use Drupal\Core\Cache\Cache;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Field\FormatterBase;
 use Drupal\Core\Form\FormStateInterface;
@@ -107,6 +108,14 @@ class JwplayerFormatter extends FormatterBase {
         $file_uri = $item->entity->getFileUri();
         $file_mime = $item->entity->getMimeType();
         $uri = file_create_url($file_uri);
+
+        // Add cache tags for the referenced file and the preset if it can be
+        // loaded, to prevent fatal errors.
+        $tags = $item->entity->getCacheTags();
+        if ($preset = Jw_player::load($this->getSetting('jwplayer_preset'))) {
+          $tags = Cache::mergeTags($tags, $preset->getCacheTags());
+        }
+
         $element[$delta] = array(
           'player' => array(
             '#theme' => 'jw_player',
@@ -126,7 +135,7 @@ class JwplayerFormatter extends FormatterBase {
             'library' => array('jw_player/jwplayer'),
           ),
           '#cache' => array(
-            'tags' => $item->entity->getCacheTags(),
+            'tags' => $tags,
           ),
         );
       }
