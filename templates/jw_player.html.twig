@@ -5,6 +5,11 @@
 </div>
 {% if  jw_player_inline_js_code  %}
     <script type="text/javascript">
-        jwplayer('{{ html_id }}').setup( {% autoescape false %}{{ jw_player_inline_js_code }}{% endautoescape %});
+        {% autoescape false %}
+        {% if license_key %}
+        jwplayer.key = {{ license_key }}
+        {% endif %}
+        jwplayer('{{ html_id }}').setup( {{ jw_player_inline_js_code }})
+        {% endautoescape %};
     </script>
 {% endif %}

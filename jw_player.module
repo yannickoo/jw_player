@@ -150,13 +150,6 @@ function jw_player_library_info_alter(&$libraries, $extension) {
       'type' => 'external',
     );
   }
-  if ($key = $config->get('license_key')) {
-    $libraries['jwplayer']['js']['jwplayer.key=' . json_encode($key)] = array(
-      'type' => 'inline',
-      'scope' => 'header',
-      'weight' => 5,
-    );
-  }
   // Use integration files from library definition.
   foreach ($info['integration files'] as $module => $files) {
     foreach (array_keys($files) as $type) {

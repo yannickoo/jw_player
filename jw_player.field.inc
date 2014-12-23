@@ -18,6 +18,9 @@ use Drupal\jw_player\Entity\Jw_player;
  */
 function template_preprocess_jw_player(&$variables) {
   $config = \Drupal::config('jw_player.settings');
+  if ($key = $config->get('license_key')) {
+    $variables['license_key'] = json_encode($key);
+  }
   // Load defaults as the starting point.
   $default_settings = jw_player_default_settings();
   // Load preset if set.
