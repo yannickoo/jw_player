@@ -25,7 +25,7 @@ function jw_player_requirements($phase) {
 
     $requirements['jw_player'] = array(
       'title' => t('JW Player'),
-      'value' => !empty($errors) ? _theme('item_list', array('items' => $errors)) . t('Please consult INSTALL.txt for installation instructions.') : t('Installed correctly'),
+      'value' => !empty($errors) ? \Drupal::theme()->render('item_list', array('items' => $errors)) . t('Please consult INSTALL.txt for installation instructions.') : t('Installed correctly'),
       'severity' => !empty($errors) ? REQUIREMENT_ERROR : REQUIREMENT_OK,
     );
   }
