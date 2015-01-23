@@ -7,9 +7,7 @@
 namespace Drupal\jw_player\Form;
 
 use Drupal\Core\Form\ConfigFormBase;
-use Drupal\Core\Config\ConfigFactory;
 use Drupal\Core\Form\FormStateInterface;
-use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Configure search settings for this site.
@@ -17,18 +15,18 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 class JwplayerSettingsForm extends ConfigFormBase {
 
 
-  public static function create(ContainerInterface $container) {
-    return new static(
-      $container->get('config.factory')
-    );
-  }
-
-
   /**
    * {@inheritdoc}
    */
   public function getFormId() {
     return 'jwplayer_main_settings';
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function getEditableConfigNames() {
+    return ['jw_player.settings'];
   }
 
   /**

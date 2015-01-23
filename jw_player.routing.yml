@@ -20,14 +20,14 @@ jw_player.preset_add:
     _title: 'Add a new preset'
   requirements:
     _permission: 'administer site configuration'
-jw_player.edit:
+entity.jw_player.edit_form:
   path: '/admin/config/media/jw_player/{jw_player}'
   defaults:
     _entity_form: 'jw_player.edit'
     _title: 'Edit preset'
   requirements:
     _permission: 'administer site configuration'
-jw_player.delete:
+entity.jw_player.delete_form:
   path: '/admin/config/media/jw_player/{jw_player}/delete'
   defaults:
     _entity_form: 'jw_player.delete'

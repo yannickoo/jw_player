@@ -28,8 +28,8 @@ use Drupal\jw_player\Jw_playerInterface;
  *     "uuid" = "uuid"
  *   },
  *   links = {
- *    "edit-form" = "jw_player.edit",
- *    "delete-form" = "jw_player.delete"
+ *    "edit-form" = "/admin/config/media/jw_player/{jw_player}",
+ *    "delete-form" = "/admin/config/media/jw_player/{jw_player}/delete"
  *   }
  * )
  */
