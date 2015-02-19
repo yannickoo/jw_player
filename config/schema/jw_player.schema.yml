@@ -36,3 +36,30 @@ jw_player.preset.*:
         autoplay:
           type: boolean
           label: 'Autoplay'
+        advertising:
+          type: mapping
+          label: 'Advertising'
+          mapping:
+            client:
+              type: label
+              label: 'Client'
+            tag:
+              type: string
+              label: 'Tag'
+
+field.formatter.settings.jwplayer_formatter:
+  type: mapping
+  mapping:
+    jwplayer_preset:
+      type: label
+      label: 'Select preset'
+
+jw_player.settings:
+    type: mapping
+    mapping:
+      account_token:
+        type: string
+        label: 'Cloud-Hosted Account Token'
+      license_key:
+        type: string
+        label: 'Self-Hosted Player License Key'
