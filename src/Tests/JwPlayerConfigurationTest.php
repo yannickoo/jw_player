@@ -112,7 +112,7 @@ class JwPlayerConfigurationTest extends WebTestBase {
     $value = $this->xpath('//video/@id');
     $id = (string) $value[0]['id'];
     // Check the jw_player js.
-    $this->assertRaw('jwplayer(\'' . $id . '\').setup( {"file":"' . file_create_url('public://myVideo.mp4') . '","width":100,"height":100,"controlbar":"bottom","base":"/","advertising":{"client":"vast","tag":"www.example.com/vast"},"primary":"html5"})');
+    $this->assertRaw('jwplayer(\'' . $id . '\').setup( {"file":"' . file_create_url('public://myVideo.mp4') . '","width":100,"height":100,"controlbar":"bottom","advertising":{"client":"vast","tag":"www.example.com/vast"},"primary":"html5"})');
     // Make sure the hash is there.
     $this->assertTrue(preg_match('/jwplayer-[a-zA-Z0-9]{1,}$/', $id));
     // Check the library created because of cloud hosting.

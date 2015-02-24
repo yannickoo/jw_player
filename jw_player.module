@@ -33,6 +33,8 @@ function jw_player_theme() {
 function jw_player_default_settings() {
   $defaults = &drupal_static(__FUNCTION__);
 
+  $config = \Drupal::config('jw_player.settings');
+
   if (!isset($defaults)) {
     $defaults = array(
       'width' => '640',
@@ -44,8 +46,12 @@ function jw_player_default_settings() {
       'advertising' => array(
         'client' => '',
         'tag' => '',
-      )
+      ),
     );
+
+    if ($config->get('account_token')) {
+      unset($defaults['base']);
+    }
   }
   return $defaults;
 }
@@ -128,7 +134,13 @@ function jw_player_library_info_alter(&$libraries, $extension) {
   );
 
   $config = \Drupal::config('jw_player.settings');
-  if ($info['installed']) {
+  if ($account_token = $config->get('account_token')) {
+    // Cloud hosted player, use external JavaScript.
+    $libraries['jwplayer']['js']["//jwpsrv.com/library/{$account_token}.js"] = array(
+      'type' => 'external',
+    );
+  }
+  elseif ($info['installed']) {
     // Self hosted player, use files from library definition.
     if (!empty($info['files']['js'])) {
       foreach ($info['files']['js'] as $data => $option) {
@@ -144,12 +156,7 @@ function jw_player_library_info_alter(&$libraries, $extension) {
       }
     }
   }
-  elseif ($account_token = $config->get('account_token')) {
-    // Cloud hosted player, use external JavaScript.
-    $libraries['jwplayer']['js']["//jwpsrv.com/library/{$account_token}.js"] = array(
-      'type' => 'external',
-    );
-  }
+
   // Use integration files from library definition.
   foreach ($info['integration files'] as $module => $files) {
     foreach (array_keys($files) as $type) {
