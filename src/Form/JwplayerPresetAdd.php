@@ -72,7 +72,7 @@ class JwplayerPresetAdd extends EntityForm {
       '#maxlength' => 255,
       '#title' => $this->t('Preset name'),
       '#description' => $this->t('Enter name for the preset.'),
-      '#default_value' =>  $preset->label(),
+      '#default_value' => $preset->label(),
       '#required' => TRUE,
       '#weight' => 0,
     );
@@ -82,7 +82,7 @@ class JwplayerPresetAdd extends EntityForm {
       '#type' => 'machine_name',
       '#default_value' => $preset->id(),
       '#machine_name' => array(
-        'exists' =>  array($this, 'exists'),
+        'exists' => array($this, 'exists'),
       ),
       '#weight' => 1,
       '#description' => t('Enter the machine name for the preset. It must be unique and contain only alphanumeric characters and underscores.'),

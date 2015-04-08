@@ -88,7 +88,7 @@ class JwPlayerConfigurationTest extends WebTestBase {
     $this->assertFieldByName('settings[controlbar]', 'bottom');
 
     // Create a JW player format file field in JW content type.
-    static::fieldUIAddNewField('admin/structure/types/manage/jw_player', 'video', 'Video', 'file', array(), array('field[settings][file_extensions]' => 'mp4'));
+    static::fieldUIAddNewField('admin/structure/types/manage/jw_player', 'video', 'Video', 'file', array(), array('settings[file_extensions]' => 'mp4'));
     $this->drupalPostForm('admin/structure/types/manage/jw_player/display', array('fields[field_video][type]' => 'jwplayer_formatter'), t('Save'));
     $this->drupalPostAjaxForm(NULL, NULL, 'field_video_settings_edit');
     $this->drupalPostForm(NULL, NULL, t('Update'));
