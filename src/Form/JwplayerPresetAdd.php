@@ -6,7 +6,7 @@
 
 namespace Drupal\jw_player\Form;
 
-use Drupal\Component\Utility\String;
+use Drupal\Component\Utility\SafeMarkup;
 use Drupal\Component\Utility\Unicode;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityForm;
@@ -172,8 +172,8 @@ class JwplayerPresetAdd extends EntityForm {
       // Fieldset per plugin.
       $form['settings']['plugins'][$plugin] = array(
         '#type' => 'fieldset',
-        '#title' => String::checkPlain($info['name']),
-        '#description' => String::checkPlain($info['description']),
+        '#title' => SafeMarkup::checkPlain($info['name']),
+        '#description' => SafeMarkup::checkPlain($info['description']),
         '#tree' => TRUE,
         '#weight' => 10,
         '#collapsible' => TRUE,
@@ -184,7 +184,7 @@ class JwplayerPresetAdd extends EntityForm {
       $form['settings']['plugins'][$plugin]['enable'] = array(
         '#type' => 'checkbox',
         '#title' => t('Enable'),
-        '#description' => String::checkPlain($info['description']),
+        '#description' => SafeMarkup::checkPlain($info['description']),
 //        '#default_value' => isset($settings['plugins'][$plugin]['enable']) ? $settings['plugins'][$plugin]['enable'] : FALSE,
       );
 
