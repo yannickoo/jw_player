@@ -55,7 +55,7 @@ field.formatter.settings.jwplayer_formatter:
       label: 'Select preset'
 
 jw_player.settings:
-    type: mapping
+    type: config_object
     mapping:
       account_token:
         type: string
