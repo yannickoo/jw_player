@@ -20,9 +20,8 @@ use Drupal\jw_player\Entity\Jw_player;
  *   id = "jwplayer_formatter",
  *   label = @Translation("Jw player"),
  *   field_types = {
- *     "file"
+ *     "file", "link"
  *   },
-
  * )
  */
 class JwplayerFormatter extends FormatterBase {
@@ -139,7 +138,24 @@ class JwplayerFormatter extends FormatterBase {
           ),
         );
       }
+      elseif ($item->getFieldDefinition()->getType() == 'link') {
+        $uri = $item->getUrl()->getUri();
+
+        $element[$delta] = array(
+          'player' => array(
+            '#theme' => 'jw_player',
+            '#file_url' => $uri,
+            '#item' => $item,
+            '#preset' => $this->getSetting('jwplayer_preset'),
+            '#html_id' => 'jwplayer-' . md5(rand()),
+          ),
+          '#attached' => array(
+            'library' => array('jw_player/jwplayer'),
+          ),
+        );
+      }
     }
+
     return $element;
   }
 
