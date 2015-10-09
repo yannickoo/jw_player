@@ -1,0 +1,14 @@
+{
+  "name": "drupal/jw_player",
+  "type": "drupal-module",
+  "description": "JW Player",
+  "keywords": ["Drupal"],
+  "license": "GPL-2.0+",
+  "homepage": "http://drupal.org/project/jw_player",
+  "minimum-stability": "dev",
+  "support": {
+    "issues": "http://drupal.org/project/issues/jw_player",
+    "source": "http://cgit.drupalcode.org/jw_player"
+  },
+  "require": { }
+}
