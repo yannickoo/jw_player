@@ -99,7 +99,7 @@ class JwplayerFormatter extends FormatterBase {
   /**
    * {@inheritdoc}
    */
-  public function viewElements(FieldItemListInterface $items, $langcode) {
+  public function viewElements(FieldItemListInterface $items) {
     $element = array();
     // Process files for the theme function.
     foreach ($items as $delta => $item) {
